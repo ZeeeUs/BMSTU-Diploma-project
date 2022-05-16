@@ -1,6 +1,6 @@
 .idea
 
-./config.toml
+config.toml
 
-./cert.pem
-./key.pem
+cert.pem
+key.pem
