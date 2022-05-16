@@ -2,16 +2,19 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/repository"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/hasher"
+
+	"github.com/jackc/pgx"
 )
 
 type UserUsecase interface {
-	Signup(context.Context, models.User) (models.User, int, error)
+	UserLogin(context.Context, models.UserCredentials) (models.User, int, error)
 }
 
 type userUsecase struct {
@@ -26,18 +29,22 @@ func NewUserUsecase(ur repository.UserRepository, timeout time.Duration) UserUse
 	}
 }
 
-func (uu *userUsecase) Signup(ctx context.Context, user models.User) (models.User, int, error) {
-	hashedPass, err := hasher.HashAndSalt(user.Password)
+func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentials) (models.User, int, error) {
+	user, err := uu.UserRepository.GetUserByEmail(ctx, creds.Email)
+	if err == pgx.ErrNoRows {
+		return models.User{}, http.StatusNotFound, fmt.Errorf("user with email %s is not found", creds.Email)
+	} else if err != nil {
+		return models.User{}, http.StatusInternalServerError, err
+	}
+
+	isVerify, err := hasher.ComparePasswords(user.Password, creds.Password)
 	if err != nil {
 		return models.User{}, http.StatusInternalServerError, err
 	}
 
-	user.Password = hashedPass
-	createdUser, err := uu.UserRepository.CreateUser(ctx, user)
-
-	if err != nil {
-		return models.User{}, http.StatusInternalServerError, err
+	if !isVerify {
+		return models.User{}, http.StatusForbidden, err
 	}
 
-	return createdUser, http.StatusOK, nil
+	return user, http.StatusOK, nil
 }

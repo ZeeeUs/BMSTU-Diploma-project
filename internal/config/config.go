@@ -26,9 +26,16 @@ type TimeoutsConfig struct {
 	ContextTimeout time.Duration
 }
 
+type RedisConfig struct {
+	Addr       string
+	Password   string
+	MaxRetries int
+}
+
 type Config struct {
 	DbConfig     DbConfig
 	ServerConfig ServerConfig
+	RedisConfig  RedisConfig
 	Timeouts     TimeoutsConfig
 }
 
@@ -59,6 +66,11 @@ func NewConfig() *Config {
 		},
 		ServerConfig: ServerConfig{
 			Addr: viper.GetString("server.addr"),
+		},
+		RedisConfig: RedisConfig{
+			Addr:       viper.GetString("redis.addr"),
+			Password:   viper.GetString("redis.password"),
+			MaxRetries: viper.GetInt("redis.maxretries"),
 		},
 		Timeouts: TimeoutsConfig{
 			WriteTimeout:   5 * time.Second,

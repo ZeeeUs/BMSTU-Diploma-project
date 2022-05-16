@@ -5,12 +5,13 @@ import (
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/config"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
+
 	"github.com/jackc/pgx"
 	"github.com/sirupsen/logrus"
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, user models.User) (models.User, error)
+	GetUserByEmail(ctx context.Context, email string) (models.User, error)
 }
 
 type userRepository struct {
@@ -35,22 +36,20 @@ func NewUserRepository(config *config.Config, logger *logrus.Logger) (UserReposi
 	return &userRepository{pgConn, logger}, nil
 }
 
-func (u *userRepository) CreateUser(ctx context.Context, user models.User) (models.User, error) {
-	var newUser models.User
-
-	err := u.Conn.QueryRow("insert into bmstudb.user (password, firstname, middle_name, lastname, email)"+
-		" values ($1, $2, $3, $4, $5)"+
-		" returning password, firstname, middle_name, lastname, email",
-		user.Password, user.Firstname, user.MiddleName, user.Lastname, user.Email).Scan(
-		&newUser.Password,
-		&newUser.Firstname,
-		&newUser.MiddleName,
-		&newUser.Lastname,
-		&newUser.Email,
+func (u *userRepository) GetUserByEmail(ctx context.Context, email string) (user models.User, err error) {
+	err = u.Conn.QueryRow("select password, pass_status, firstname, middle_name, lastname, email"+
+		" where email=$1", email).Scan(
+		&user.Password,
+		&user.PassStatus,
+		&user.Firstname,
+		&user.MiddleName,
+		&user.Lastname,
+		&user.Email,
 	)
+
 	if err != nil {
 		return models.User{}, err
 	}
 
-	return newUser, err
+	return
 }
