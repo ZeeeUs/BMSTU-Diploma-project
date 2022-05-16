@@ -1,0 +1,9 @@
+[DATABASE]
+POSTGRES_DB="bmstuDb"
+POSTGRES_USER="bmstuUser"
+POSTGRES_PASSWORD="pgpwd4bmstu"
+DB_HOSTNAME="localhost"
+PORT=5432
+
+[SERVER]
+ADDR="localhost:8080"
