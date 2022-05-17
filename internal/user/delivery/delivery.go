@@ -21,13 +21,15 @@ type UserHandler struct {
 	logger         *logrus.Logger
 }
 
-func SetUserRouting(router *mux.Router, log *logrus.Logger, us usecase.UserUsecase) {
+func SetUserRouting(router *mux.Router, log *logrus.Logger, uu usecase.UserUsecase, su usecase.SessionUsecas) {
 	userHandler := &UserHandler{
-		UserUseCase: us,
-		logger:      log,
+		UserUseCase:    uu,
+		SessionUseCase: su,
+		logger:         log,
 	}
 
 	router.HandleFunc("/user/login", userHandler.UserLogin).Methods("POST", "OPTIONS")
+	router.HandleFunc("/user/login", userHandler.UpdateUser).Methods("PUT", "OPTIONS")
 }
 
 func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
@@ -36,19 +38,22 @@ func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	var creds models.UserCredentials
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
-		uh.logger.Errorf("UserLogin: failed read json with error: %w", err)
+		uh.logger.Errorf("UserLogin: failed read json with error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	user, status, err := uh.UserUseCase.UserLogin(r.Context(), creds)
 	if err != nil || status != http.StatusOK {
-		uh.logger.Errorf("UserLogin: failed user verification with [error: %w] [status: %d]", err, status)
+		uh.logger.Errorf("UserLogin: failed user verification with [error: %s] [status: %d]", err, status)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	cookie, err := uh.newUserCookie(user.Email)
 	if err != nil {
-		uh.logger.Errorf("UserDelivery.UserLoginPost: failed create cookie for user with error: %w", err)
+		uh.logger.Errorf("UserDelivery.UserLoginPost: failed create cookie for user with error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -59,9 +64,17 @@ func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	err = uh.SessionUseCase.AddSession(r.Context(), sess)
 	if err != nil {
-		uh.logger.Errorf("UserLoginPost: failed add session in tnt for user with error: %w", err)
+		uh.logger.Errorf("UserLoginPost: failed add session in tnt for user with error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	http.SetCookie(w, &cookie)
+	res, _ := json.Marshal(user)
+	w.Write(res)
+}
+
+func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 }
 

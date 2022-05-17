@@ -37,8 +37,9 @@ func NewUserRepository(config *config.Config, logger *logrus.Logger) (UserReposi
 }
 
 func (u *userRepository) GetUserByEmail(ctx context.Context, email string) (user models.User, err error) {
-	err = u.Conn.QueryRow("select password, pass_status, firstname, middle_name, lastname, email"+
+	err = u.Conn.QueryRow("select id, password, pass_status, firstname, middle_name, lastname, email from dashboard.users"+
 		" where email=$1", email).Scan(
+		&user.Id,
 		&user.Password,
 		&user.PassStatus,
 		&user.Firstname,

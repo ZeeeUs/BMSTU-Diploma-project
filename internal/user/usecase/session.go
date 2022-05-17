@@ -6,6 +6,7 @@ import (
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/repository"
+	"github.com/sirupsen/logrus"
 )
 
 type SessionUsecas interface {
@@ -15,12 +16,14 @@ type SessionUsecas interface {
 type sessionUsecase struct {
 	Session        repository.SessionRepository
 	contextTimeout time.Duration
+	logger         *logrus.Logger
 }
 
-func NewSessionUsecase(session repository.SessionRepository, timeout time.Duration) SessionUsecas {
+func NewSessionUsecase(session repository.SessionRepository, timeout time.Duration, logger *logrus.Logger) SessionUsecas {
 	return &sessionUsecase{
 		Session:        session,
 		contextTimeout: timeout,
+		logger:         logger,
 	}
 }
 
