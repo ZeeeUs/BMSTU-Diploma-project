@@ -83,7 +83,7 @@ func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (uh *UserHandler) UpdatePassworde(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	// TODO реализовать ручку

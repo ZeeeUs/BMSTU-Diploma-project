@@ -1,0 +1,14 @@
+[DATABASE]
+POSTGRES_DB="bmstuDb"
+POSTGRES_USER="bmstuUser"
+POSTGRES_PASSWORD="pgpwd4bmstu"
+DB_HOSTNAME="localhost"
+PORT=5432
+
+[SERVER]
+ADDR="0.0.0.0:8000"
+
+[REDIS]
+Addr="0.0.0.0:7000"
+Password=""
+MaxRetries=5
