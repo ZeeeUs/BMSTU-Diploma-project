@@ -7,6 +7,7 @@ import (
 	userDelivery "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/delivery"
 	userRepository "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/repository"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/usecase"
+	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/middleware"
 	redisClient "github.com/ZeeeUs/BMSTU-Diploma-project/pkg/redis"
 
 	"github.com/go-redis/redis"
@@ -42,7 +43,9 @@ func main() {
 	userUseCase := usecase.NewUserUsecase(userRepo, cfg.Timeouts.ContextTimeout, log)
 	sessionUseCase := usecase.NewSessionUsecase(sessionRepo, cfg.Timeouts.ContextTimeout, log)
 
-	userDelivery.SetUserRouting(router, log, userUseCase, sessionUseCase)
+	m := middleware.NewMiddleware(userRepo, sessionRepo)
+
+	userDelivery.SetUserRouting(router, log, userUseCase, sessionUseCase, m)
 
 	server := &http.Server{
 		Handler:      router,

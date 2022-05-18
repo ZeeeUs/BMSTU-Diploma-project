@@ -10,26 +10,30 @@ import (
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/usecase"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/hasher"
+	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/middleware"
 	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 )
 
+type Manager interface {
+}
+
 type UserHandler struct {
 	UserUseCase    usecase.UserUsecase
-	SessionUseCase usecase.SessionUsecas
+	SessionUseCase usecase.SessionUsecase
 	logger         *logrus.Logger
 }
 
-func SetUserRouting(router *mux.Router, log *logrus.Logger, uu usecase.UserUsecase, su usecase.SessionUsecas) {
+func SetUserRouting(router *mux.Router, log *logrus.Logger, uu usecase.UserUsecase, su usecase.SessionUsecase, m *middleware.Middleware) {
 	userHandler := &UserHandler{
 		UserUseCase:    uu,
 		SessionUseCase: su,
 		logger:         log,
 	}
 
-	router.HandleFunc("/user/login", userHandler.UserLogin).Methods("POST", "OPTIONS")
-	router.HandleFunc("/user/login", userHandler.UpdateUser).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/user/login", m.SetCSRF(userHandler.UserLogin)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/user/login", m.CheckCSRFAndGetUser(userHandler.UpdatePassword)).Methods("PUT", "OPTIONS")
 }
 
 func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
@@ -64,18 +68,34 @@ func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	err = uh.SessionUseCase.AddSession(r.Context(), sess)
 	if err != nil {
-		uh.logger.Errorf("UserLoginPost: failed add session in tnt for user with error: %s", err)
+		uh.logger.Errorf("UserLoginPost: failed add session too redis for user with error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	http.SetCookie(w, &cookie)
 	res, _ := json.Marshal(user)
-	w.Write(res)
+	_, err = w.Write(res)
+	if err != nil {
+		uh.logger.Errorf("UserLoginPost: faild to write json: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
-func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) UpdatePassworde(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
+	// TODO реализовать ручку
+	curUser, ok := r.Context().Value("user").(models.User)
+	if !ok {
+		uh.logger.Errorf("Problem with get value from cookie %v", ok)
+	}
+
+	uh.logger.Infof("Current user %v", curUser)
+
+	jsnUsr, _ := json.Marshal(curUser)
+	w.Write(jsnUsr)
 }
 
 func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {
@@ -92,8 +112,8 @@ func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {
 		Name:     "sessionId",
 		Value:    md5CookieValue,
 		Expires:  expiration,
-		Secure:   true,
-		HttpOnly: true,
+		Secure:   false,
+		HttpOnly: false,
 		SameSite: http.SameSiteNoneMode,
 	}
 

@@ -9,8 +9,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type SessionUsecas interface {
+type SessionUsecase interface {
 	AddSession(context.Context, models.Session) error
+	GetSessionByToken(context.Context, string) (models.Session, error)
 }
 
 type sessionUsecase struct {
@@ -19,7 +20,7 @@ type sessionUsecase struct {
 	logger         *logrus.Logger
 }
 
-func NewSessionUsecase(session repository.SessionRepository, timeout time.Duration, logger *logrus.Logger) SessionUsecas {
+func NewSessionUsecase(session repository.SessionRepository, timeout time.Duration, logger *logrus.Logger) SessionUsecase {
 	return &sessionUsecase{
 		Session:        session,
 		contextTimeout: timeout,
@@ -33,4 +34,13 @@ func (su *sessionUsecase) AddSession(ctx context.Context, session models.Session
 		return err
 	}
 	return nil
+}
+
+func (su *sessionUsecase) GetSessionByToken(ctx context.Context, token string) (models.Session, error) {
+	id, err := su.Session.GetSessionByToken(ctx, token)
+	if err != nil {
+		return models.Session{}, err
+	}
+
+	return models.Session{Cookie: token, Id: id}, nil
 }

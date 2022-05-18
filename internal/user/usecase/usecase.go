@@ -17,6 +17,7 @@ import (
 type UserUsecase interface {
 	UserLogin(context.Context, models.UserCredentials) (models.User, int, error)
 	UpdateUser(ctx context.Context, user models.User) (models.User, error)
+	GetUserById(ctx context.Context, id int) (models.User, error)
 }
 
 type userUsecase struct {
@@ -59,4 +60,8 @@ func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentia
 
 func (uu *userUsecase) UpdateUser(ctx context.Context, user models.User) (models.User, error) {
 	return models.User{}, nil
+}
+
+func (uu *userUsecase) GetUserById(ctx context.Context, id int) (models.User, error) {
+	return uu.UserRepository.GetUserById(ctx, id)
 }
