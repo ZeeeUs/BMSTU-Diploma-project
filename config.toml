@@ -9,6 +9,6 @@ PORT=5432
 ADDR="0.0.0.0:8000"
 
 [REDIS]
-Addr="0.0.0.0:7000"
+Addr="0.0.0.0:7500"
 Password=""
 MaxRetries=5
