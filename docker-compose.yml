@@ -16,7 +16,7 @@ services:
       - postgres
 
   redis:
-    image: "dashboard_redis"
+    image: redis:7.0-alpine
     ports:
       - "7500:7500"
     restart: on-failure
