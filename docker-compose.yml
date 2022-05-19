@@ -3,7 +3,7 @@ version: "3"
 volumes:
   dbbackups:
   postgis-data:
-#  redis:
+  redis:
 
 services:
   dashboard:
@@ -12,22 +12,22 @@ services:
       - "8000:8000"
     restart: on-failure
     depends_on:
-#      - redis
+      - redis
       - postgres
 
-#  redis:
-#    image: "dashboard_redis"
-#    ports:
-#      - "7500:7500"
-#    restart: on-failure
-#    volumes:
-#      - redis:/var/lib/redis
+  redis:
+    image: "dashboard_redis"
+    ports:
+      - "7500:7500"
+    restart: on-failure
+    volumes:
+      - redis:/var/lib/redis
 
   postgres:
     image: postgres:13.6-alpine
     volumes:
       - postgis-data:/var/lib/postgresql
-      - $PWD/db/postgreSQL/dump.sql:/docker-entrypoint-initdb.d/dump.sql
+      - $PWD/db/dump.sql:/docker-entrypoint-initdb.d/dump.sql
     environment:
       POSTGRES_DB: "bmstuDb"
       POSTGRES_USER: "bmstuUser"
