@@ -2,7 +2,7 @@
 POSTGRES_DB="bmstuDb"
 POSTGRES_USER="bmstuUser"
 POSTGRES_PASSWORD="pgpwd4bmstu"
-DB_HOSTNAME="localhost"
+DB_HOSTNAME="127.0.0.1"
 PORT=5432
 
 [SERVER]
