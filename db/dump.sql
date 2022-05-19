@@ -42,7 +42,7 @@ CREATE TABLE dashboard.student_event
     event_status int
 );
 
-CREATE TABLE supervisors
+CREATE TABLE dashboard.supervisors
 (
     id      serial PRIMARY KEY NOT NULL,
     user_id int2               not null
