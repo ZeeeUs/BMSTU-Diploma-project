@@ -54,6 +54,6 @@ func main() {
 		ReadTimeout:  http.DefaultClient.Timeout,
 	}
 
-	log.Infof("Server start at addt %s", server.Addr)
+	log.Infof("Server start at addr %s", server.Addr)
 	log.Fatal(server.ListenAndServe())
 }
