@@ -18,6 +18,13 @@ CREATE TABLE students
     foreign key (group_id) references groups (id) on delete set null
 );
 
+CREATE TABLE groups
+(
+    id         serial
+        primary key,
+    group_code varchar(25) not null
+);
+
 CREATE TABLE student_event
 (
     id           serial PRIMARY KEY NOT NULL,
