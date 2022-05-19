@@ -33,7 +33,8 @@ func SetUserRouting(router *mux.Router, log *logrus.Logger, uu usecase.UserUseca
 	}
 
 	router.HandleFunc("/user/login", m.SetCSRF(userHandler.UserLogin)).Methods("POST", "OPTIONS")
-	router.HandleFunc("/user/login", m.CheckCSRFAndGetUser(userHandler.UpdatePassword)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/user/login", m.SetCSRF(userHandler.UpdateUser)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/user", m.CheckCSRFAndGetUser(userHandler.GetUser)).Methods("GET", "OPTIONS")
 }
 
 func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
@@ -77,25 +78,37 @@ func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	res, _ := json.Marshal(user)
 	_, err = w.Write(res)
 	if err != nil {
-		uh.logger.Errorf("UserLoginPost: faild to write json: %s", err)
+		uh.logger.Errorf("UserLoginPost: failed to write json: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
-func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	// TODO реализовать ручку
 	curUser, ok := r.Context().Value("user").(models.User)
 	if !ok {
 		uh.logger.Errorf("Problem with get value from cookie %v", ok)
 	}
 
-	uh.logger.Infof("Current user %v", curUser)
-
 	jsnUsr, _ := json.Marshal(curUser)
-	w.Write(jsnUsr)
+	_, err := w.Write(jsnUsr)
+	if err != nil {
+		uh.logger.Errorf("GetUser: failed to write json: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	//curUser, ok := r.Context().Value("user").(models.User)
+	//if !ok {
+	//	uh.logger.Errorf("Problem with get value from cookie %v", ok)
+	//}
+
 }
 
 func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {

@@ -43,8 +43,6 @@ func (m Middleware) GetUser(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func (m Middleware) CheckCSRFAndGetUser(next http.HandlerFunc) http.HandlerFunc {
-	//m.CheckCSRF(next)
-	//m.permission.GetCurrentUser(next)
 	return m.CheckCSRF(m.permission.GetCurrentUser(next))
 }
 
@@ -106,8 +104,6 @@ func (perm *Permission) GetCurrentUser(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		log.Println(session)
-
 		id, err := perm.sr.GetSessionByToken(r.Context(), session.Value)
 		if err != nil {
 			log.Errorf("Permissions.CheckAuth: failed GetSessionByCookie with error: %s", err)
@@ -115,16 +111,12 @@ func (perm *Permission) GetCurrentUser(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		log.Println(id)
-
 		currentUser, err := perm.ur.GetUserById(r.Context(), id)
 		if err != nil {
 			log.Errorf("Permissions.GetCurrentUser: failed GetUserById with [error: %s]", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		log.Println(currentUser)
 
 		r = r.WithContext(context.WithValue(r.Context(), "user", currentUser))
 		next.ServeHTTP(w, r)

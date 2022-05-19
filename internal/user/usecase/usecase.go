@@ -59,6 +59,7 @@ func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentia
 }
 
 func (uu *userUsecase) UpdateUser(ctx context.Context, user models.User) (models.User, error) {
+	//user, err := uu.UserRepository.UpdateUser(ctx)
 	return models.User{}, nil
 }
 

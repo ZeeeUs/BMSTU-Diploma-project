@@ -42,8 +42,6 @@ func (sr *sessionRepository) GetSessionByToken(ctx context.Context, cookieVal st
 		return 0, err
 	}
 
-	//strconv.
-
 	newId, err := strconv.Atoi(id.(string))
 	if err != nil {
 		sr.logger.Println(err)

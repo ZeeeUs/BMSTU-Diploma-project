@@ -15,7 +15,7 @@ services:
       - redis
       - postgres
 
-  tarantool:
+  redis:
     image: "dashboard_redis"
     ports:
       - "7500:7500"
