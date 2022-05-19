@@ -27,7 +27,7 @@ services:
     image: postgres:13.6-alpine
     volumes:
       - postgis-data:/var/lib/postgresql
-      - $PWD/db/dump.sql:/docker-entrypoint-initdb.d/dump.sql
+      - ./db/:/docker-entrypoint-initdb.d/
     environment:
       POSTGRES_DB: "bmstuDb"
       POSTGRES_USER: "bmstuUser"
