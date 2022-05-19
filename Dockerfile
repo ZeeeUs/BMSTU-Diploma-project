@@ -1,7 +1,10 @@
-FROM golang:1.16 AS build
-WORKDIR /go/src
-COPY go ./go
-COPY main.go .
+FROM golang:1.16
 
-ENV CGO_ENABLED=0
-RUN go get -d -v ./...
+WORKDIR /app
+
+COPY . ./
+RUN go mod download
+
+RUN go build -o dashboard ./cmd
+
+CMD [ "./dashboard" ]
