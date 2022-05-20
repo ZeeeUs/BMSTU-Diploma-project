@@ -17,5 +17,10 @@ type User struct {
 	Lastname   string `json:"lastname"`
 	Email      string `json:"email"`
 	Password   string `json:"password"`
-	PassStatus int    `json:"pass_status"`
+	PassStatus bool   `json:"pass_status"`
+}
+
+type UpdateUser struct {
+	OldPass string `json:"old_pass"`
+	NewPass string `json:"new_pass"`
 }

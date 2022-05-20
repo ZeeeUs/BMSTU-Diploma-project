@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
@@ -33,7 +35,7 @@ func SetUserRouting(router *mux.Router, log *logrus.Logger, uu usecase.UserUseca
 	}
 
 	router.HandleFunc("/user/login", m.SetCSRF(userHandler.UserLogin)).Methods("POST", "OPTIONS")
-	router.HandleFunc("/user/login", m.SetCSRF(userHandler.UpdateUser)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/user/login", m.CheckCSRFAndAuth(userHandler.UpdateUser)).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/user", m.CheckCSRFAndGetUser(userHandler.GetUser)).Methods("GET", "OPTIONS")
 }
 
@@ -104,11 +106,56 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	//curUser, ok := r.Context().Value("user").(models.User)
-	//if !ok {
-	//	uh.logger.Errorf("Problem with get value from cookie %v", ok)
-	//}
+	var (
+		updateData   models.UpdateUser
+		validOldPass bool
+	)
+	err := json.NewDecoder(r.Body).Decode(&updateData)
+	if err != nil {
+		uh.logger.Errorf("UpdateUser: failed read json with error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
+	curUser, ok := r.Context().Value("user").(models.User)
+	if !ok {
+		uh.logger.Errorf("Problem with get value from cookie %v", ok)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if curUser.PassStatus {
+		validOldPass, err = hasher.ComparePasswords(curUser.Password, updateData.OldPass)
+		if err != nil {
+			uh.logger.Errorf("compare password in UserUpdate return error: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if strings.Compare(curUser.Password, updateData.OldPass) != 0 {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if !validOldPass {
+		w.Write([]byte("passwords doesn't matched"))
+	}
+
+	newPass, err := hasher.HashAndSalt(updateData.NewPass)
+	if err != nil {
+		uh.logger.Errorf("UpdateUser: password don't be hashed and salt: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	id, err := uh.UserUseCase.UpdateUser(r.Context(), newPass, curUser.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(strconv.Itoa(id)))
 }
 
 func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {
