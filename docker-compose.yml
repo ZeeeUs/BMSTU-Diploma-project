@@ -6,8 +6,8 @@ volumes:
   redis:
 
 services:
-  dashboard:
-    image: dashboard
+  api_go:
+    image: api_go
     ports:
       - "8000:8000"
     restart: on-failure
@@ -29,9 +29,9 @@ services:
       - postgis-data:/var/lib/postgresql
       - ./db/:/docker-entrypoint-initdb.d/
     environment:
-      POSTGRES_DB: "bmstuDb"
-      POSTGRES_USER: "bmstuUser"
-      POSTGRES_PASSWORD: "pgpwd4bmstu"
+      POSTGRES_DB: "bdb"
+      POSTGRES_USER: "buser"
+      POSTGRES_PASSWORD: "bpassword"
     ports:
       - "5432:5432"
     restart: on-failure

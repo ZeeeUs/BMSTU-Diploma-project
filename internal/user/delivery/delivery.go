@@ -34,9 +34,9 @@ func SetUserRouting(router *mux.Router, log *logrus.Logger, uu usecase.UserUseca
 		logger:         log,
 	}
 
-	router.HandleFunc("/user/login", m.SetCSRF(userHandler.UserLogin)).Methods("POST", "OPTIONS")
-	router.HandleFunc("/user/login", m.CheckCSRFAndAuth(userHandler.UpdateUser)).Methods("PUT", "OPTIONS")
-	router.HandleFunc("/user", m.CheckCSRFAndGetUser(userHandler.GetUser)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/user/login", m.SetCSRF(userHandler.UserLogin)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/v1/user/login", m.CheckCSRFAndAuth(userHandler.UpdateUser)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/api/v1/user", m.CheckCSRFAndGetUser(userHandler.GetUser)).Methods("GET", "OPTIONS")
 }
 
 func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
