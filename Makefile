@@ -13,7 +13,7 @@ build:
 
 ## run: Run server api_go + postgres + redis
 run:
-	@@docker compose up
+	@docker compose up
 
 
 ## clean: Delete docker image
