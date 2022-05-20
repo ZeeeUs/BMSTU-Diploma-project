@@ -25,21 +25,15 @@ func NewMiddleware(ur userRepository.UserRepository, sr userRepository.SessionRe
 }
 
 func (m Middleware) CheckAuth(next http.HandlerFunc) http.HandlerFunc {
-	m.SetCSRF(next)
-	m.permission.CheckAuth(next)
-	return next
+	return m.SetCSRF(m.permission.CheckAuth(next))
 }
 
 func (m Middleware) CheckCSRFAndAuth(next http.HandlerFunc) http.HandlerFunc {
-	m.CheckCSRF(next)
-	m.permission.CheckAuth(next)
-	return next
+	return m.CheckCSRF(m.permission.CheckAuth(next))
 }
 
 func (m Middleware) GetUser(next http.HandlerFunc) http.HandlerFunc {
-	m.SetCSRF(next)
-	m.permission.GetCurrentUser(next)
-	return next
+	return m.SetCSRF(m.permission.GetCurrentUser(next))
 }
 
 func (m Middleware) CheckCSRFAndGetUser(next http.HandlerFunc) http.HandlerFunc {
