@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -16,7 +17,7 @@ import (
 
 type UserUsecase interface {
 	UserLogin(context.Context, models.UserCredentials) (models.User, int, error)
-	UpdateUser(ctx context.Context, user models.User) (models.User, error)
+	UpdateUser(ctx context.Context, newPass string, email string) (int, error)
 	GetUserById(ctx context.Context, id int) (models.User, error)
 }
 
@@ -42,7 +43,7 @@ func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentia
 		return models.User{}, http.StatusInternalServerError, err
 	}
 
-	if user.PassStatus == 0 {
+	if !user.PassStatus {
 		return user, http.StatusOK, nil
 	}
 
@@ -58,9 +59,18 @@ func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentia
 	return user, http.StatusOK, nil
 }
 
-func (uu *userUsecase) UpdateUser(ctx context.Context, user models.User) (models.User, error) {
-	//user, err := uu.UserRepository.UpdateUser(ctx)
-	return models.User{}, nil
+func (uu *userUsecase) UpdateUser(ctx context.Context, newPass string, email string) (int, error) {
+	id, err := uu.UserRepository.UpdateUser(ctx, newPass, email)
+	if err != nil {
+		uu.logger.Errorf("User use case: faile to UpdateUser: %s", err)
+		return 0, err
+	}
+
+	if id <= 0 {
+		return 0, errors.New("update table in db is not correct")
+	}
+
+	return id, nil
 }
 
 func (uu *userUsecase) GetUserById(ctx context.Context, id int) (models.User, error) {

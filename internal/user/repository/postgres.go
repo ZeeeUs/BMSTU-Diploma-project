@@ -59,7 +59,7 @@ func (u *userRepository) GetUserByEmail(ctx context.Context, email string) (user
 
 func (u *userRepository) UpdateUser(ctx context.Context, pswd string, email string) (id int, err error) {
 	err = u.Conn.QueryRow("update dashboard.users"+
-		" set password=$1"+
+		" set password=$1, pass_status=true"+
 		" where email=$2 returning id", pswd, email).Scan(&id)
 	if err != nil {
 		return 0, err
