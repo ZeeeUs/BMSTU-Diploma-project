@@ -1,9 +1,4 @@
-version: "3"
-
-volumes:
-  dbbackups:
-  postgis-data:
-  redis:
+version: "3.7"
 
 services:
   api_go:
@@ -16,15 +11,17 @@ services:
       - postgres
 
   redis:
-    image: redis:7.0-alpine
+    image: grokzen/redis-cluster:latest
     ports:
       - "7500:7500"
+    environment:
+      - IP=0.0.0.0
     restart: on-failure
     volumes:
       - redis:/var/lib/redis
 
   postgres:
-    image: postgres:13.6-alpine
+    image: postgres:13.6
     volumes:
       - postgis-data:/var/lib/postgresql
       - ./db/:/docker-entrypoint-initdb.d/
@@ -37,3 +34,7 @@ services:
     restart: on-failure
     healthcheck:
       test: "exit 0"
+
+volumes:
+  postgis-data:
+  redis:
