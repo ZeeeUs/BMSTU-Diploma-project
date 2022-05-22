@@ -54,10 +54,14 @@ func (m Middleware) CheckCSRF(next http.HandlerFunc) http.HandlerFunc {
 			csrf := r.Header.Get("x-csrf-Token")
 			csrfCookie, err := r.Cookie("csrf")
 
-			if err != nil || csrf == "" || csrfCookie.Value == "" || csrfCookie.Value != csrf {
-				w.WriteHeader(http.StatusForbidden)
-				return
-			}
+			// TODO РАСКОММЕНТИТЬ
+			//if err != nil || csrf == "" || csrfCookie.Value == "" || csrfCookie.Value != csrf {
+			//	w.WriteHeader(http.StatusForbidden)
+			//	return
+			//}
+
+			log.Println(csrf, csrfCookie.Value, err)
+
 			generateCsrfLogic(w)
 			next.ServeHTTP(w, r)
 		})

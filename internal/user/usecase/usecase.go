@@ -44,10 +44,10 @@ func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentia
 	}
 
 	if !user.PassStatus {
-		if strings.Compare(user.Password, creds.Password) != 0 {
+		if strings.Compare(user.Password, creds.Password) == 0 {
 			return user, nil
 		}
-		
+
 		return models.User{}, errors.New("401")
 	}
 
