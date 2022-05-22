@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
@@ -16,7 +15,7 @@ import (
 )
 
 type UserUsecase interface {
-	UserLogin(context.Context, models.UserCredentials) (models.User, int, error)
+	UserLogin(context.Context, models.UserCredentials) (models.User, error)
 	UpdateUser(ctx context.Context, newPass string, email string) (int, error)
 	GetUserById(ctx context.Context, id int) (models.User, error)
 }
@@ -35,28 +34,28 @@ func NewUserUsecase(ur repository.UserRepository, timeout time.Duration, log *lo
 	}
 }
 
-func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentials) (models.User, int, error) {
+func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentials) (models.User, error) {
 	user, err := uu.UserRepository.GetUserByEmail(ctx, creds.Email)
 	if err == pgx.ErrNoRows {
-		return models.User{}, http.StatusNotFound, fmt.Errorf("user with email %s is not found", creds.Email)
+		return models.User{}, fmt.Errorf("user with email %s is not found", creds.Email)
 	} else if err != nil {
-		return models.User{}, http.StatusInternalServerError, err
+		return models.User{}, err
 	}
 
 	if !user.PassStatus {
-		return user, http.StatusOK, nil
+		return user, nil
 	}
 
 	isVerify, err := hasher.ComparePasswords(user.Password, creds.Password)
 	if err != nil {
-		return models.User{}, http.StatusInternalServerError, err
+		return models.User{}, err
 	}
 
 	if !isVerify {
-		return models.User{}, http.StatusForbidden, err
+		return models.User{}, err
 	}
 
-	return user, http.StatusOK, nil
+	return user, nil
 }
 
 func (uu *userUsecase) UpdateUser(ctx context.Context, newPass string, email string) (int, error) {

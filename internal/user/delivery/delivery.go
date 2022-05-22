@@ -18,9 +18,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Manager interface {
-}
-
 type UserHandler struct {
 	UserUseCase    usecase.UserUsecase
 	SessionUseCase usecase.SessionUsecase
@@ -35,7 +32,7 @@ func SetUserRouting(router *mux.Router, log *logrus.Logger, uu usecase.UserUseca
 	}
 
 	router.HandleFunc("/api/v1/user/login", m.SetCSRF(userHandler.UserLogin)).Methods("POST", "OPTIONS")
-	router.HandleFunc("/api/v1/user/login", m.CheckCSRFAndAuth(userHandler.UpdateUser)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/api/v1/user/login", m.CheckCSRFAndGetUser(userHandler.UpdateUser)).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/api/v1/user", m.CheckCSRFAndGetUser(userHandler.GetUser)).Methods("GET", "OPTIONS")
 }
 
@@ -50,10 +47,10 @@ func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, status, err := uh.UserUseCase.UserLogin(r.Context(), creds)
-	if err != nil || status != http.StatusOK {
-		uh.logger.Errorf("UserLogin: failed user verification with [error: %s] [status: %d]", err, status)
-		w.WriteHeader(http.StatusInternalServerError)
+	user, err := uh.UserUseCase.UserLogin(r.Context(), creds)
+	if err != nil {
+		uh.logger.Errorf("UserLogin: failed user verification with [error: %s]", err)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -92,6 +89,7 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	curUser, ok := r.Context().Value("user").(models.User)
 	if !ok {
 		uh.logger.Errorf("Problem with get value from cookie %v", ok)
+		return
 	}
 
 	jsnUsr, _ := json.Marshal(curUser)
@@ -123,11 +121,13 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	uh.logger.Info(curUser.PassStatus, curUser.Id)
 
 	if curUser.PassStatus {
 		validOldPass, err = hasher.ComparePasswords(curUser.Password, updateData.OldPass)
 		if err != nil {
 			uh.logger.Errorf("compare password in UserUpdate return error: %s", err)
+			uh.logger.Info("HERE")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -140,6 +140,7 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	if !validOldPass {
 		w.Write([]byte("passwords doesn't matched"))
+		return
 	}
 
 	newPass, err := hasher.HashAndSalt(updateData.NewPass)
@@ -175,6 +176,7 @@ func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {
 		Secure:   false,
 		HttpOnly: false,
 		SameSite: http.SameSiteNoneMode,
+		Path:     "/api/v1",
 	}
 
 	return cookie, nil

@@ -3,7 +3,7 @@ CREATE schema dashboard;
 CREATE TABLE dashboard.users
 (
     id          serial PRIMARY KEY NOT NULL,
-    password    varchar(50)        NOT NULL,
+    password    text               NOT NULL,
     pass_status bool,
     firstname   varchar(255)       NOT NULL,
     middle_name varchar(255)       NOT NULL,
@@ -91,24 +91,38 @@ CREATE TABLE dashboard.comments
     comment_field text
 );
 
-alter table dashboard.students add foreign key (user_id) references dashboard.users (id) on delete cascade;
-alter table dashboard.students add   foreign key (group_id) references dashboard.groups (id) on delete set null;
+alter table dashboard.students
+    add foreign key (user_id) references dashboard.users (id) on delete cascade;
+alter table dashboard.students
+    add foreign key (group_id) references dashboard.groups (id) on delete set null;
 
-alter table dashboard.events add foreign key (course_id) references dashboard.courses (id) on delete cascade;
+alter table dashboard.events
+    add foreign key (course_id) references dashboard.courses (id) on delete cascade;
 
-alter table dashboard.student_event add foreign key (student_id) references dashboard.students (id) on delete cascade;
-alter table dashboard.student_event add foreign key (event_id) references dashboard.events (id) on delete cascade;
+alter table dashboard.student_event
+    add foreign key (student_id) references dashboard.students (id) on delete cascade;
+alter table dashboard.student_event
+    add foreign key (event_id) references dashboard.events (id) on delete cascade;
 
-alter table dashboard.supervisors add foreign key (user_id) references dashboard.users (id) on delete cascade;
+alter table dashboard.supervisors
+    add foreign key (user_id) references dashboard.users (id) on delete cascade;
 
-alter table dashboard.supervisors_courses add foreign key (course_id) references dashboard.courses (id) on delete cascade;
-alter table dashboard.supervisors_courses add foreign key (supervisor_id) references dashboard.supervisors (id) on delete cascade;
+alter table dashboard.supervisors_courses
+    add foreign key (course_id) references dashboard.courses (id) on delete cascade;
+alter table dashboard.supervisors_courses
+    add foreign key (supervisor_id) references dashboard.supervisors (id) on delete cascade;
 
-alter table dashboard.supervisors_courses add foreign key (course_id) references dashboard.courses (id) on delete cascade;
-alter table dashboard.supervisors_courses add foreign key (supervisor_id) references dashboard.supervisors (id) on delete cascade;
+alter table dashboard.supervisors_courses
+    add foreign key (course_id) references dashboard.courses (id) on delete cascade;
+alter table dashboard.supervisors_courses
+    add foreign key (supervisor_id) references dashboard.supervisors (id) on delete cascade;
 
-alter table dashboard.events_eventsName add foreign key (event_id) references dashboard.events (id) on delete cascade;
-alter table dashboard.events_eventsName add foreign key ("event-name_id") references dashboard.events_names (id) on delete cascade;
+alter table dashboard.events_eventsName
+    add foreign key (event_id) references dashboard.events (id) on delete cascade;
+alter table dashboard.events_eventsName
+    add foreign key ("event-name_id") references dashboard.events_names (id) on delete cascade;
 
-alter table dashboard.group_course add foreign key (group_id) references dashboard.groups (id) on delete cascade;
-alter table dashboard.group_course add foreign key (course_id) references dashboard.courses (id) on delete cascade;
+alter table dashboard.group_course
+    add foreign key (group_id) references dashboard.groups (id) on delete cascade;
+alter table dashboard.group_course
+    add foreign key (course_id) references dashboard.courses (id) on delete cascade;
