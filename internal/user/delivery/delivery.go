@@ -127,7 +127,7 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		validOldPass, err = hasher.ComparePasswords(curUser.Password, updateData.OldPass)
 		if err != nil {
 			uh.logger.Errorf("compare password in UserUpdate return error: %s", err)
-			uh.logger.Info("HERE")
+			//uh.logger.Info("HERE")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -173,10 +173,9 @@ func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {
 		Name:     "sessionId",
 		Value:    md5CookieValue,
 		Expires:  expiration,
-		Secure:   false,
-		HttpOnly: false,
-		SameSite: http.SameSiteNoneMode,
-		Path:     "/api/v1",
+		Secure:   true,
+		HttpOnly: true,
+		Path:     "/",
 	}
 
 	return cookie, nil

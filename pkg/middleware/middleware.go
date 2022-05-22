@@ -95,6 +95,7 @@ func (perm *Permission) GetCurrentUser(next http.HandlerFunc) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("Permissions.CheckAuth: no cookie: %s", err)
 			w.WriteHeader(http.StatusBadRequest)
+			//w.Write([]byte(""))
 			return
 		}
 
@@ -123,7 +124,7 @@ func generateCsrfLogic(w http.ResponseWriter) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-	timeDelta := time.Now().Add(time.Hour * 24 * 30)
+	timeDelta := time.Now().Add(time.Hour * 12)
 	csrfCookie := &http.Cookie{Name: "csrf", Value: csrf.String(), Path: "/", HttpOnly: true, Expires: timeDelta}
 
 	http.SetCookie(w, csrfCookie)

@@ -8,7 +8,8 @@ CREATE TABLE dashboard.users
     firstname   varchar(255)       NOT NULL,
     middle_name varchar(255)       NOT NULL,
     lastname    varchar(255)       NOT NULL,
-    email       varchar unique     not null
+    email       varchar unique     not null,
+    is_super    boolean            not null
 );
 CREATE TABLE dashboard.groups
 (
@@ -126,3 +127,12 @@ alter table dashboard.group_course
     add foreign key (group_id) references dashboard.groups (id) on delete cascade;
 alter table dashboard.group_course
     add foreign key (course_id) references dashboard.courses (id) on delete cascade;
+
+insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super) VALUES ('hello', false, 'Test', 'Test', 'Test', 'test@test', true);
+insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super) VALUES ('world', false, 'Борис', 'Иванович', 'Джонсон', 'ivanovbi@bmstu.ru', false);
+insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super) VALUES ('world', false, 'Валерий', 'Михайлович', 'Чёрненький', 'test2', true);
+
+
+insert into dashboard.groups (group_code) values ('ИУ5-85Б');
+insert into dashboard.students (user_id, group_id) VALUES (2, 1);
+
