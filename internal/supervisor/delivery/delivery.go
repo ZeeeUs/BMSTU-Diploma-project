@@ -23,7 +23,7 @@ func SetSupersRouting(router *mux.Router, log *logrus.Logger, su usecase.SupersU
 		logger:        log,
 	}
 
-	router.HandleFunc("/api/v1/supervisor/courses", m.CheckCSRF(supersHandler.GetSupersCourses)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/supervisor/courses", m.CheckCSRFAndGetUser(supersHandler.GetSupersCourses)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/supervisor", m.CheckCSRFAndGetUser(supersHandler.GetSupers)).Methods("GET", "OPTIONS")
 }
 
@@ -51,6 +51,7 @@ func (sh *SupersHandler) GetSupersCourses(w http.ResponseWriter, r *http.Request
 	curUser, ok := r.Context().Value("user").(models.User)
 	if !ok {
 		sh.logger.Errorf("Problem with get value from cookie %v", ok)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
@@ -43,7 +44,11 @@ func (uu *userUsecase) UserLogin(ctx context.Context, creds models.UserCredentia
 	}
 
 	if !user.PassStatus {
-		return user, nil
+		if strings.Compare(user.Password, creds.Password) != 0 {
+			return user, nil
+		}
+		
+		return models.User{}, errors.New("401")
 	}
 
 	isVerify, err := hasher.ComparePasswords(user.Password, creds.Password)
