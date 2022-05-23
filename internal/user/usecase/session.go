@@ -47,9 +47,10 @@ func (su *sessionUsecase) GetSessionByToken(ctx context.Context, token string) (
 }
 
 func (su *sessionUsecase) DeleteSession(ctx context.Context) error {
-	err := su.Session.DeleteSession(ctx)
-	if err != nil {
-		return err
-	}
+
+	//err := su.Session.DeleteSession(ctx, sessionId)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }

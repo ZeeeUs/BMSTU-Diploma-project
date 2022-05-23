@@ -36,4 +36,4 @@ COPY --from=build /app/main/ .
 
 EXPOSE 5000
 ENV PGPASSWORD bpassword
-CMD service postgresql start && psql -h localhost -d bdb -U buser -p 5432 -a -q -f ./db/dump.sql && redis-server --port 7500 --daemonize yes && python3 ./py_script/main.py && ./main
+CMD service postgresql start && psql -h localhost -d bdb -U buser -p 5432 -a -q -f ./db/dump.sql && psql -h localhost -d bdb -U buser -p 5432 -a -q -f ./db/views.sql && redis-server --port 7500 --daemonize yes && python3 ./py_script/main.py && ./main

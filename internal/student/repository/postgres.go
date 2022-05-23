@@ -9,7 +9,7 @@ import (
 )
 
 type StudentRepository interface {
-	GetUserGroup(ctx context.Context, id int) (models.Group, error)
+	GetUserGroup(ctx context.Context, id int) (models.Group, int, error)
 	GetTable(ctx context.Context, id int) (table models.Table, err error)
 }
 
@@ -25,14 +25,15 @@ func NewStudentRepository(pgConn *pgx.ConnPool, logger *logrus.Logger) StudentRe
 	}
 }
 
-func (sr *studentRepository) GetUserGroup(ctx context.Context, id int) (group models.Group, err error) {
-	err = sr.conn.QueryRow("select id, group_code from dashboard.student_group_v where user_id=$1", id).Scan(
+func (sr *studentRepository) GetUserGroup(ctx context.Context, id int) (group models.Group, studentId int, err error) {
+	err = sr.conn.QueryRow("select student_id, id, group_code from test_db.student_group_v where user_id=$1", id).Scan(
+		&studentId,
 		&group.Id,
 		&group.GroupCode,
 	)
 
 	if err != nil {
-		return models.Group{}, err
+		return models.Group{}, 0, err
 	}
 
 	return

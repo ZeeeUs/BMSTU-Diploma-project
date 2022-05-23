@@ -36,7 +36,7 @@ func (sh *StudentHandler) GetStudent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := sh.StudentUsecase.GetStudentGroup(r.Context(), curUser.Id)
+	group, studentId, err := sh.StudentUsecase.GetStudentGroup(r.Context(), curUser.Id)
 	if err != nil {
 		sh.logger.Errorf("Problem with get student group %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -44,7 +44,7 @@ func (sh *StudentHandler) GetStudent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	student := models.Student{
-		Id:         curUser.Id,
+		Id:         studentId,
 		Firstname:  curUser.Firstname,
 		MiddleName: curUser.MiddleName,
 		Lastname:   curUser.Lastname,
