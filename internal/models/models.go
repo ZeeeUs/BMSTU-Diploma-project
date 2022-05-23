@@ -1,5 +1,11 @@
 package models
 
+import (
+	"time"
+
+	"github.com/jackc/pgx/pgtype"
+)
+
 type Session struct {
 	Cookie string
 	Id     int
@@ -53,4 +59,25 @@ type Student struct {
 	Lastname   string `json:"lastname"`
 	Email      string `json:"email"`
 	Group      Group  `json:"group"`
+}
+
+type Table struct {
+	Courses []CCourse `json:"courses"`
+}
+
+type CCourse struct {
+	CourseId   int     `json:"courseId"`
+	CourseName string  `json:"courseName"`
+	Events     []Event `json:"events"`
+}
+
+type Event struct {
+	EventId     int         `json:"eventId"`
+	EventDate   time.Time   `json:"eventDate"`
+	Deadline    time.Time   `json:"deadline"`
+	Status      int         `json:"status"`
+	EventName   string      `json:"eventName"`
+	Description pgtype.Text `json:"description"`
+	Files       []string    `json:"files"`
+	Comments    []string    `json:"comment"`
 }

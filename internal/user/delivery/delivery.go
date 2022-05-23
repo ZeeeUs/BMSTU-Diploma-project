@@ -34,6 +34,7 @@ func SetUserRouting(router *mux.Router, log *logrus.Logger, uu usecase.UserUseca
 	router.HandleFunc("/api/v1/user/login", m.SetCSRF(userHandler.UserLogin)).Methods("POST", "OPTIONS")
 	router.HandleFunc("/api/v1/user/login", m.CheckCSRFAndGetUser(userHandler.UpdateUser)).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/api/v1/user", m.CheckCSRFAndGetUser(userHandler.GetUser)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/user/logout", m.CheckCSRFAndGetUser(userHandler.UserLogout)).Methods("GET", "OPTIONS")
 }
 
 func (uh *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
@@ -105,8 +106,8 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	var (
-		updateData   models.UpdateUser
-		validOldPass bool
+		updateData models.UpdateUser
+		//validOldPass bool
 	)
 	err := json.NewDecoder(r.Body).Decode(&updateData)
 	if err != nil {
@@ -121,13 +122,14 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	uh.logger.Info(curUser.PassStatus, curUser.Id)
+	//uh.logger.Info(curUser.PassStatus, curUser.Id)
+
+	uh.logger.Info(curUser.Email, "", curUser.Id)
 
 	if curUser.PassStatus {
-		validOldPass, err = hasher.ComparePasswords(curUser.Password, updateData.OldPass)
+		_, err = hasher.ComparePasswords(curUser.Password, updateData.OldPass)
 		if err != nil {
 			uh.logger.Errorf("compare password in UserUpdate return error: %s", err)
-			//uh.logger.Info("HERE")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -138,10 +140,10 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if !validOldPass {
-		w.Write([]byte("passwords doesn't matched"))
-		return
-	}
+	//if !validOldPass {
+	//	w.Write([]byte("passwords doesn't matched"))
+	//	return
+	//}
 
 	newPass, err := hasher.HashAndSalt(updateData.NewPass)
 	if err != nil {
@@ -159,6 +161,37 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(strconv.Itoa(id)))
 }
 
+func (uh *UserHandler) UserLogout(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	err := uh.SessionUseCase.DeleteSession(r.Context())
+	if err != nil {
+		uh.logger.Errorf("UserDelivery.UserLogout: failed delete session in tnt for user with error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	authCookie := &http.Cookie{
+		Name:     "sessionId",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, authCookie)
+
+	csrfCookie := &http.Cookie{
+		Name:     "csrf",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, csrfCookie)
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {
 	expiration := time.Now().Add(12 * time.Hour)
 
@@ -173,8 +206,8 @@ func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {
 		Name:     "sessionId",
 		Value:    md5CookieValue,
 		Expires:  expiration,
-		Secure:   true,
-		HttpOnly: true,
+		Secure:   false,
+		HttpOnly: false,
 		Path:     "/",
 	}
 

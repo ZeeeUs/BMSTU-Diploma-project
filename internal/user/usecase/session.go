@@ -12,6 +12,7 @@ import (
 type SessionUsecase interface {
 	AddSession(context.Context, models.Session) error
 	GetSessionByToken(context.Context, string) (models.Session, error)
+	DeleteSession(ctx context.Context) error
 }
 
 type sessionUsecase struct {
@@ -43,4 +44,12 @@ func (su *sessionUsecase) GetSessionByToken(ctx context.Context, token string) (
 	}
 
 	return models.Session{Cookie: token, Id: id}, nil
+}
+
+func (su *sessionUsecase) DeleteSession(ctx context.Context) error {
+	err := su.Session.DeleteSession(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

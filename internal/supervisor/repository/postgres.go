@@ -26,7 +26,7 @@ func NewSupersRepository(pgConn *pgx.ConnPool, log *logrus.Logger) SupersReposit
 }
 
 func (su *supersRepo) GetSupersCourses(ctx context.Context, id int) ([]models.Course, error) {
-	rows, err := su.conn.Query("select course_id, course_name, semester from dashboard.supers_v where user_id=$1", id)
+	rows, err := su.conn.Query("select course_id, course_name, semester from test_db.supers_v where user_id=$1", id)
 	defer rows.Close()
 
 	var (
