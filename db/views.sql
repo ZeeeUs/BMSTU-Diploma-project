@@ -23,4 +23,25 @@ from dashboard.users as us,
 where st.user_id = us.id
   and st.group_id = g.id;
 
-select * from dashboard.student_group_v where user_id=2;
+--  For handler /table
+create or replace view dashboard.student_event_v as
+select se.id,
+       se.student_id,
+       cs.id as course_id,
+       cs.semester,
+       cs.course_name,
+       se.upload_files,
+       se.grade,
+       evs.event_name,
+       evst.status
+from dashboard.student_event as se,
+     dashboard.students as stud,
+     dashboard.events as evs,
+     dashboard.event_status as evst,
+     dashboard.users as usr,
+     dashboard.courses as cs
+where se.student_id = stud.id
+  and stud.user_id = usr.id
+  and se.event_id = evs.id
+  and se.event_status = evst.id
+  and evs.course_id = cs.id;

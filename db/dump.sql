@@ -62,22 +62,22 @@ CREATE TABLE dashboard.courses
     course_name varchar(255)       not null
 );
 
-CREATE TABLE dashboard.events_eventsName
-(
-    event_id        int not null,
-    "event-name_id" int not null
-);
+-- CREATE TABLE dashboard.events_eventsName
+-- (
+--     event_id        int not null,
+--     "event-name_id" int not null
+-- );
 
-CREATE TABLE dashboard.events_names
-(
-    id   serial PRIMARY KEY NOT NULL,
-    name varchar(255)       not null
-);
+-- CREATE TABLE dashboard.events_names
+-- (
+--     id   serial PRIMARY KEY NOT NULL,
+--     name varchar(255)       not null
+-- );
 
 CREATE TABLE dashboard.event_status
 (
-    id          serial PRIMARY KEY NOT NULL,
-    status_name varchar(255)       not null
+    id     serial PRIMARY KEY NOT NULL,
+    status varchar(255)       not null
 );
 
 CREATE TABLE dashboard.group_course
@@ -118,21 +118,59 @@ alter table dashboard.supervisors_courses
 alter table dashboard.supervisors_courses
     add foreign key (supervisor_id) references dashboard.supervisors (id) on delete cascade;
 
-alter table dashboard.events_eventsName
-    add foreign key (event_id) references dashboard.events (id) on delete cascade;
-alter table dashboard.events_eventsName
-    add foreign key ("event-name_id") references dashboard.events_names (id) on delete cascade;
+-- alter table dashboard.events_eventsName
+--     add foreign key (event_id) references dashboard.events (id) on delete cascade;
+-- alter table dashboard.events_eventsName
+--     add foreign key ("event-name_id") references dashboard.events_names (id) on delete cascade;
 
 alter table dashboard.group_course
     add foreign key (group_id) references dashboard.groups (id) on delete cascade;
 alter table dashboard.group_course
     add foreign key (course_id) references dashboard.courses (id) on delete cascade;
 
-insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super) VALUES ('hello', false, 'Test', 'Test', 'Test', 'test@test', true);
-insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super) VALUES ('world', false, 'Борис', 'Иванович', 'Джонсон', 'ivanovbi@bmstu.ru', false);
-insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super) VALUES ('world', false, 'Валерий', 'Михайлович', 'Чёрненький', 'test2', true);
+insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super)
+VALUES ('hello', false, 'Test', 'Test', 'Test', 'test@test', true);
+insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super)
+VALUES ('world', false, 'Борис', 'Иванович', 'Джонсон', 'ivanovbi@bmstu.ru', false);
+insert into dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super)
+VALUES ('world', false, 'Валерий', 'Михайлович', 'Чёрненький', 'test2', true);
 
+-- Courses
+-- 4 events
+insert into dashboard.courses (semester, course_name)
+VALUES (7,'Сетевое программное обеспечение');
+-- 2 events
+insert into dashboard.courses (semester, course_name)
+VALUES (8,'Технологии машинного обучения');
+insert into dashboard.courses (semester, course_name)
+VALUES (7,'Защита информации');
+insert into dashboard.courses (semester, course_name)
+VALUES (8,'Защита информации');
 
-insert into dashboard.groups (group_code) values ('ИУ5-85Б');
-insert into dashboard.students (user_id, group_id) VALUES (2, 1);
+insert into dashboard.courses (semester, course_name)
+VALUES (8, 'Беспроводные сети');
+insert into dashboard.courses (semester, course_name)
+VALUES (8, 'Эксплуатация АСОиУ');
 
+insert into dashboard.groups (group_code)
+values ('ИУ5-85Б');
+insert into dashboard.supervisors (id, user_id)
+VALUES (2, 74), (3, 75), (4, 76), (5, 66), (6, 67);
+
+select * from dashboard.students;
+
+insert into dashboard.groups (group_code)
+VALUES ('ИУ5-81Б');
+
+select * from dashboard.users;
+
+insert into dashboard.event_status(status)
+values ('В работе');
+
+insert into dashboard.events(course_id, event_name, event_date, deadline)
+VALUES (1, 'Рубежный контроль 1', '2022-09-01', '2022-09-10');
+
+insert into dashboard.student_event (student_id, event_id, event_status)
+values (1, 1, 1);
+
+-- select * from dashboard.users;

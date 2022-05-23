@@ -48,11 +48,15 @@ func (m Middleware) SetCSRF(next http.HandlerFunc) http.HandlerFunc {
 		})
 }
 
+func (m Middleware) CheckCSRFAndGetStudent(next http.HandlerFunc) http.HandlerFunc {
+	return m.CheckCSRF(m.permission.GetStudent(next))
+}
+
 func (m Middleware) CheckCSRF(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			csrf := r.Header.Get("x-csrf-Token")
-			csrfCookie, err := r.Cookie("csrf")
+			//csrf := r.Header.Get("x-csrf-Token")
+			//csrfCookie, _ := r.Cookie("csrf")
 
 			// TODO РАСКОММЕНТИТЬ
 			//if err != nil || csrf == "" || csrfCookie.Value == "" || csrfCookie.Value != csrf {
@@ -60,7 +64,14 @@ func (m Middleware) CheckCSRF(next http.HandlerFunc) http.HandlerFunc {
 			//	return
 			//}
 
-			log.Println(csrf, csrfCookie.Value, err)
+			//if err != nil {
+			//	w.WriteHeader(http.StatusForbidden)
+			//	return
+			//}
+
+			//log.Println(csrfCookie.Value)
+
+			//log.Println(csrf, csrfCookie.Value, err)
 
 			generateCsrfLogic(w)
 			next.ServeHTTP(w, r)
@@ -118,6 +129,34 @@ func (perm *Permission) GetCurrentUser(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		r = r.WithContext(context.WithValue(r.Context(), "user", currentUser))
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (perm *Permission) GetStudent(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, err := r.Cookie("sessionId")
+		if err != nil {
+			log.Errorf("Permissions.CheckAuth: no cookie: %s", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		id, err := perm.sr.GetSessionByToken(r.Context(), session.Value)
+		if err != nil {
+			log.Errorf("Permissions.CheckAuth: failed GetSessionByCookie with error: %s", err)
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		studentId, err := perm.ur.GetStudentId(r.Context(), id)
+		if err != nil {
+			log.Errorf("Permissions.GetCurrentUser: failed GetUserById with [error: %s]", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		r = r.WithContext(context.WithValue(r.Context(), "studentId", studentId))
 		next.ServeHTTP(w, r)
 	})
 }

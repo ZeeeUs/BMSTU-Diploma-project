@@ -12,6 +12,7 @@ import (
 
 type StudentUsecase interface {
 	GetStudentGroup(ctx context.Context, id int) (models.Group, error)
+	GetTable(ctx context.Context, id int) (models.Table, error)
 }
 
 type studentUsecase struct {
@@ -35,4 +36,12 @@ func (su *studentUsecase) GetStudentGroup(ctx context.Context, id int) (models.G
 	}
 
 	return group, nil
+}
+
+func (su *studentUsecase) GetTable(ctx context.Context, id int) (models.Table, error) {
+	table, err := su.StudentRepository.GetTable(ctx, id)
+	if err == pgx.ErrNoRows {
+		return models.Table{}, fmt.Errorf("can't get table for student with id = %d: err %s", id, err)
+	}
+	return table, nil
 }
