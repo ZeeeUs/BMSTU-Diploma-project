@@ -164,12 +164,12 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 func (uh *UserHandler) UserLogout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	err := uh.SessionUseCase.DeleteSession(r.Context())
-	if err != nil {
-		uh.logger.Errorf("UserDelivery.UserLogout: failed delete session in tnt for user with error: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	//err := uh.SessionUseCase.DeleteSession(r.Context())
+	//if err != nil {
+	//	uh.logger.Errorf("UserDelivery.UserLogout: failed delete session in redis for user with error: %s", err)
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
 
 	authCookie := &http.Cookie{
 		Name:     "sessionId",

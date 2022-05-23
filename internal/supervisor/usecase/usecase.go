@@ -12,6 +12,7 @@ import (
 
 type SupersUsecase interface {
 	GetSupersCourses(ctx context.Context, id int) ([]models.Course, error)
+	GetSuperId(ctx context.Context, id int) (int, error)
 }
 
 type supersUsecase struct {
@@ -35,4 +36,15 @@ func (su *supersUsecase) GetSupersCourses(ctx context.Context, id int) ([]models
 	}
 
 	return supervisor, nil
+}
+
+func (su *supersUsecase) GetSuperId(ctx context.Context, id int) (int, error) {
+	superId, err := su.SupersRepository.GetSuperId(ctx, id)
+	if err == pgx.ErrNoRows {
+		return 0, err
+	} else if err != nil {
+		return 0, err
+	}
+
+	return superId, nil
 }

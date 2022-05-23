@@ -52,22 +52,26 @@ func (m Middleware) CheckCSRFAndGetStudent(next http.HandlerFunc) http.HandlerFu
 	return m.CheckCSRF(m.permission.GetStudent(next))
 }
 
+func (m Middleware) CheckCSRFAndGetSuper(next http.HandlerFunc) http.HandlerFunc {
+	return m.CheckCSRF(m.permission.GetSuper(next))
+}
+
 func (m Middleware) CheckCSRF(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			//csrf := r.Header.Get("x-csrf-Token")
-			//csrfCookie, _ := r.Cookie("csrf")
+			csrf := r.Header.Get("x-csrf-Token")
+			csrfCookie, err := r.Cookie("csrf")
 
 			// TODO РАСКОММЕНТИТЬ
-			//if err != nil || csrf == "" || csrfCookie.Value == "" || csrfCookie.Value != csrf {
-			//	w.WriteHeader(http.StatusForbidden)
-			//	return
-			//}
+			if err != nil || csrf == "" || csrfCookie.Value == "" || csrfCookie.Value != csrf {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
 
-			//if err != nil {
-			//	w.WriteHeader(http.StatusForbidden)
-			//	return
-			//}
+			if err != nil {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 
 			//log.Println(csrfCookie.Value)
 
@@ -157,6 +161,34 @@ func (perm *Permission) GetStudent(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		r = r.WithContext(context.WithValue(r.Context(), "studentId", studentId))
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (perm *Permission) GetSuper(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, err := r.Cookie("sessionId")
+		if err != nil {
+			log.Errorf("Permissions.CheckAuth: no cookie: %s", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		id, err := perm.sr.GetSessionByToken(r.Context(), session.Value)
+		if err != nil {
+			log.Errorf("Permissions.CheckAuth: failed GetSessionByCookie with error: %s", err)
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		superId, err := perm.ur.GetSuperId(r.Context(), id)
+		if err != nil {
+			log.Errorf("Permissions.GetCurrentUser: failed GetUserById with [error: %s]", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		r = r.WithContext(context.WithValue(r.Context(), "superId", superId))
 		next.ServeHTTP(w, r)
 	})
 }

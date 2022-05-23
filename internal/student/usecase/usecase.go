@@ -11,7 +11,7 @@ import (
 )
 
 type StudentUsecase interface {
-	GetStudentGroup(ctx context.Context, id int) (models.Group, error)
+	GetStudentGroup(ctx context.Context, id int) (models.Group, int, error)
 	GetTable(ctx context.Context, id int) (models.Table, error)
 }
 
@@ -27,15 +27,15 @@ func NewStudentUsecase(sr repository.StudentRepository, log *logrus.Logger) Stud
 	}
 }
 
-func (su *studentUsecase) GetStudentGroup(ctx context.Context, id int) (models.Group, error) {
-	group, err := su.StudentRepository.GetUserGroup(ctx, id)
+func (su *studentUsecase) GetStudentGroup(ctx context.Context, id int) (models.Group, int, error) {
+	group, studentId, err := su.StudentRepository.GetUserGroup(ctx, id)
 	if err == pgx.ErrNoRows {
-		return models.Group{}, fmt.Errorf("user with id %d is not found", id)
+		return models.Group{}, 0, fmt.Errorf("user with id %d is not found", id)
 	} else if err != nil {
-		return models.Group{}, err
+		return models.Group{}, 0, err
 	}
 
-	return group, nil
+	return group, studentId, nil
 }
 
 func (su *studentUsecase) GetTable(ctx context.Context, id int) (models.Table, error) {

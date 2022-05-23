@@ -14,6 +14,7 @@ type UserRepository interface {
 	UpdateUser(ctx context.Context, pswd string, email string) (id int, err error)
 	GetUserById(ctx context.Context, id int) (user models.User, err error)
 	GetStudentId(ctt context.Context, id int) (getId int, err error)
+	GetSuperId(ctt context.Context, id int) (getId int, err error)
 }
 
 type userRepository struct {
@@ -80,6 +81,15 @@ func (u *userRepository) GetUserById(ctx context.Context, id int) (user models.U
 
 func (u *userRepository) GetStudentId(ctt context.Context, id int) (getId int, err error) {
 	err = u.conn.QueryRow("select user_id from test_db.students where id=$1", id).Scan(&getId)
+	if err != nil {
+		return 0, err
+	}
+
+	return
+}
+
+func (u *userRepository) GetSuperId(ctt context.Context, id int) (getId int, err error) {
+	err = u.conn.QueryRow("select user_id from test_db.supervisors where id=$1", id).Scan(&getId)
 	if err != nil {
 		return 0, err
 	}

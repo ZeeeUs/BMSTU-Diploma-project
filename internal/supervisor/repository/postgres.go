@@ -11,6 +11,7 @@ import (
 
 type SupersRepository interface {
 	GetSupersCourses(ctx context.Context, id int) ([]models.Course, error)
+	GetSuperId(ctx context.Context, id int) (int, error)
 }
 
 type supersRepo struct {
@@ -50,4 +51,15 @@ func (su *supersRepo) GetSupersCourses(ctx context.Context, id int) ([]models.Co
 		})
 	}
 	return courses, nil
+}
+
+func (su *supersRepo) GetSuperId(ctx context.Context, id int) (int, error) {
+	var getId int
+	err := su.conn.QueryRow("select id from test_db.supervisors where user_id=$1", id).Scan(&getId)
+	su.logger.Info(id)
+	if err != nil {
+		return 0, err
+	}
+
+	return getId, nil
 }

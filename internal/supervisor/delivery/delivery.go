@@ -36,8 +36,20 @@ func (sh *SupersHandler) GetSupers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsnUsr, _ := json.Marshal(curUser)
-	_, err := w.Write(jsnUsr)
+	if !curUser.IsSuper {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	superId, err := sh.SupersUseCase.GetSuperId(r.Context(), curUser.Id)
+	if err != nil {
+		sh.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	jsnUsr, _ := json.Marshal(superId)
+	_, err = w.Write(jsnUsr)
 	if err != nil {
 		sh.logger.Errorf("GetSupers: failed to write json: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
