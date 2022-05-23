@@ -26,7 +26,7 @@ def fillGroups(connection):
     groups = []
     for i in range(len(groupsName)):
         group = {"groupCode": groupsName[i]}
-        insert_query = """ INSERT INTO test_db.groups (group_code)
+        insert_query = """ INSERT INTO dashboard.groups (group_code)
             VALUES (%s) returning id;"""
         cursor.execute(insert_query, (group["groupCode"],))
         connection.commit()
@@ -56,10 +56,11 @@ def fillStudents(connection, groups):
             "isSuper": False,
         }
         # вставка юзера в бд получение айдишника, пока хардкод айдишника
-        insert_query = """ INSERT INTO test_db.users (password, pass_status, firstname, middle_name, lastname, email, is_super)
+        insert_query = """ INSERT INTO dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super)
             VALUES (%s, %s, %s, %s, %s, %s, %s) returning id;"""
         cursor.execute(insert_query, (
-        user["pass"], user["passStatus"], user["fName"], user["mName"], user["lName"], user["email"], user["isSuper"],))
+            user["pass"], user["passStatus"], user["fName"], user["mName"], user["lName"], user["email"],
+            user["isSuper"],))
         connection.commit()
         id = cursor.fetchone()[0]
         user["id"] = id
@@ -71,7 +72,7 @@ def fillStudents(connection, groups):
             "groupId": groups[group]["id"],
         }
         # вставка студента в бд
-        insert_query = """ INSERT INTO test_db.students (user_id, group_id)
+        insert_query = """ INSERT INTO dashboard.students (user_id, group_id)
             VALUES (%s, %s) returning id;"""
         cursor.execute(insert_query, (student["userId"], student["groupId"],))
         connection.commit()
@@ -100,10 +101,11 @@ def fillSuperuser(connection):
             "isSuper": True,
         }
         # вставка юзера в бд получение айдишника, пока хардкод айдишника
-        insert_query = """ INSERT INTO test_db.users (password, pass_status, firstname, middle_name, lastname, email, is_super)
+        insert_query = """ INSERT INTO dashboard.users (password, pass_status, firstname, middle_name, lastname, email, is_super)
             VALUES (%s, %s, %s, %s, %s, %s, %s) returning id;"""
         cursor.execute(insert_query, (
-        user["pass"], user["passStatus"], user["fName"], user["mName"], user["lName"], user["email"], user["isSuper"],))
+            user["pass"], user["passStatus"], user["fName"], user["mName"], user["lName"], user["email"],
+            user["isSuper"],))
         connection.commit()
         id = cursor.fetchone()[0]
         user["id"] = id
@@ -113,7 +115,7 @@ def fillSuperuser(connection):
             "userId": user["id"],
         }
 
-        insert_query = """ INSERT INTO test_db.supervisors (user_id)
+        insert_query = """ INSERT INTO dashboard.supervisors (user_id)
             VALUES (%s) returning id;"""
         cursor.execute(insert_query, (superuser["userId"],))
         connection.commit()
@@ -133,7 +135,7 @@ def fillCourses(connection):
     for i in range(len(coursesName)):
         course = coursesName[i]
         # добавляем курс в бд, получаем айдишник
-        insert_query = """ INSERT INTO test_db.courses (semester, course_name)
+        insert_query = """ INSERT INTO dashboard.courses (semester, course_name)
             VALUES (%s, %s) returning id;"""
         cursor.execute(insert_query, (course["semester"], course["name"],))
         connection.commit()
@@ -155,7 +157,7 @@ def fillSupervisorCourses(connection, courses, supervisors):
             "supervisorId": supervisors[i % SUPERUSERS_COUNT]["id"],
         }
         # вставка в бд
-        insert_query = """ INSERT INTO test_db.supervisors_courses (course_id, supervisor_id)
+        insert_query = """ INSERT INTO dashboard.supervisors_courses (course_id, supervisor_id)
             VALUES (%s, %s);"""
         cursor.execute(insert_query, (supervisorCourse["courseId"], supervisorCourse["supervisorId"],))
         connection.commit()
@@ -175,7 +177,7 @@ def fillGroupCourses(connection, courses, groups):
                     "courseId": course["id"],
                     "groupId": groups[i]["id"]
                 }
-                insert_query = """ INSERT INTO test_db.group_course (group_id, course_id)
+                insert_query = """ INSERT INTO dashboard.group_course (group_id, course_id)
                 VALUES (%s,%s);"""
                 cursor.execute(insert_query, (groupCourse["groupId"], groupCourse["courseId"],))
                 connection.commit()
@@ -187,7 +189,7 @@ def fillGroupCourses(connection, courses, groups):
                     "courseId": course["id"],
                     "groupId": groups[i]["id"]
                 }
-                insert_query = """ INSERT INTO test_db.group_course (group_id, course_id)
+                insert_query = """ INSERT INTO dashboard.group_course (group_id, course_id)
                 VALUES (%s,%s);"""
                 cursor.execute(insert_query, (groupCourse["groupId"], groupCourse["courseId"],))
                 connection.commit()
@@ -217,7 +219,7 @@ def fillEvents(connection, courses):
                 "description": fake.text(),
             }
             # вставляем в бд добавляем айдишник
-            insert_query = """ INSERT INTO test_db.events (course_id, event_name, event_date, deadline)
+            insert_query = """ INSERT INTO dashboard.events (course_id, event_name, event_date, deadline)
             VALUES (%s, %s, %s, %s) returning id;"""
             cursor.execute(insert_query, (event["courseId"], event["eventName"], event["eventDate"], event["deadline"]))
             connection.commit()
@@ -249,10 +251,10 @@ def fillStudentEvents(connection, eventCourses, groupCourses, students):
                             }
                             # добавляем в бд получаем айдишник
                             # eventStudent["id"] = 0
-                            insert_query = """ INSERT INTO test_db.student_event (student_id, event_id, event_status)
+                            insert_query = """ INSERT INTO dashboard.student_event (student_id, event_id, event_status)
                             VALUES (%s, %s, %s) returning id;"""
                             cursor.execute(insert_query, (
-                            eventStudent["studentId"], eventStudent["eventId"], eventStudent["eventStatus"]))
+                                eventStudent["studentId"], eventStudent["eventId"], eventStudent["eventStatus"]))
                             connection.commit()
     cursor.close()
 
