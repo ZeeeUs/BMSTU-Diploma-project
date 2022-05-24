@@ -14,6 +14,7 @@ type SupersRepository interface {
 	GetSuperId(ctx context.Context, id int) (int, error)
 	GetGroupsByCourseId(ctx context.Context, id int) ([]models.GroupByCourse, error)
 	GetStudentsByGroup(ctx context.Context, groupId int) ([]models.StudentByGroup, error)
+	GetEventsByCourseId(ctx context.Context, id int) ([]models.Event, error)
 }
 
 type supersRepo struct {
@@ -125,4 +126,33 @@ func (su *supersRepo) GetStudentsByGroup(ctx context.Context, groupId int) ([]mo
 	}
 
 	return students, nil
+}
+
+func (su *supersRepo) GetEventsByCourseId(ctx context.Context, id int) ([]models.Event, error) {
+	rows, err := su.conn.Query("select id, event_name, event_date, deadline, description from test_db.events where course_id=$1", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.Event
+	for rows.Next() {
+		var event models.Event
+
+		err := rows.Scan(
+			&event.EventId,
+			&event.EventName,
+			&event.EventDate,
+			&event.Deadline,
+			&event.Description,
+		)
+		if err != nil {
+			su.logger.Errorf("GetGroupsByCourseId: can't scan object: %s", err)
+			continue
+		}
+
+		events = append(events, event)
+	}
+
+	return events, nil
 }

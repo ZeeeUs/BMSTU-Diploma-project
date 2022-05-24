@@ -15,6 +15,7 @@ type SupersUsecase interface {
 	GetSuperId(ctx context.Context, id int) (int, error)
 	GetGroupsByCourseId(ctx context.Context, courseId int) ([]models.GroupByCourse, error)
 	GetStudentsByGroup(ctx context.Context, courseId int) ([]models.StudentByGroup, error)
+	GetEventsByCourseId(ctx context.Context, groupId int) ([]models.Event, error)
 }
 
 type supersUsecase struct {
@@ -71,4 +72,15 @@ func (su *supersUsecase) GetStudentsByGroup(ctx context.Context, groupId int) ([
 	}
 
 	return students, nil
+}
+
+func (su *supersUsecase) GetEventsByCourseId(ctx context.Context, groupId int) ([]models.Event, error) {
+	events, err := su.SupersRepository.GetEventsByCourseId(ctx, groupId)
+	if err == pgx.ErrNoRows {
+		return nil, err
+	} else if err != nil {
+		return nil, err
+	}
+
+	return events, nil
 }

@@ -122,9 +122,6 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	//uh.logger.Info(curUser.PassStatus, curUser.Id)
-
-	uh.logger.Info(curUser.Email, "", curUser.Id)
 
 	if curUser.PassStatus {
 		_, err = hasher.ComparePasswords(curUser.Password, updateData.OldPass)
@@ -139,11 +136,6 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	//if !validOldPass {
-	//	w.Write([]byte("passwords doesn't matched"))
-	//	return
-	//}
 
 	newPass, err := hasher.HashAndSalt(updateData.NewPass)
 	if err != nil {
