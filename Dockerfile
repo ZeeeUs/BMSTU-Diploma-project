@@ -30,7 +30,6 @@ VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 USER root
 
 WORKDIR /usr/src/app
-RUN mkdir
 
 COPY . .
 COPY --from=build /app/main/ .
