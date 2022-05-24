@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
@@ -20,6 +21,7 @@ type StudentUsecase interface {
 	GetTable(ctx context.Context, id int) (models.Table, error)
 	GetGroup(ctx context.Context, id int) (models.Group, error)
 	AddFile(c context.Context, file io.Reader, fileName string, studentEventId int) (models.File, error)
+	LoadFile(ctx context.Context, student models.Student, fileName string) ([]byte, error)
 }
 
 type studentUsecase struct {
@@ -28,6 +30,10 @@ type studentUsecase struct {
 	logger         *logrus.Logger
 	contextTimeout time.Duration
 }
+
+const sourcePath = "/usr/src/app/upload_files/"
+
+//const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
 
 func NewStudentUsecase(sr repository.StudentRepository, log *logrus.Logger) StudentUsecase {
 	return &studentUsecase{
@@ -72,39 +78,59 @@ func (su *studentUsecase) AddFile(c context.Context, file io.Reader, fileName st
 		return models.File{}, errors.New("AddPhoto: can't get current student from context")
 	}
 
-	err := saveFile(currStudent, file, fileName, su.logger)
+	savedFaileName, err := saveFile(currStudent, file, fileName, su.logger)
 	if err != nil {
 		return models.File{}, err
 	}
 
-	// TODO запись в бд filePath - studentEventId
+	// TODO запись в бд filePath - studentEventId, вернуть название файла, доделать скачивание, РУЧКА
 	//err = h.UserRepo.UpdateImgs(c, currentUser.ID, currentUser.Imgs)
 	//if err != nil {
 	//	return models.File{}, err
 	//}
 
 	//return models.File{File: filePath}, nil
-	return models.File{}, nil
+	return models.File{File: savedFaileName}, nil
 }
 
-func saveFile(student models.Student, file io.Reader, fileName string, log *logrus.Logger) error {
-	path := "/usr/src/app/upload_files" + strconv.Itoa(student.UserId)
+func (su *studentUsecase) LoadFile(ctx context.Context, student models.Student, fileName string) ([]byte, error) {
+	bytesFile, err := loadFile(student.Id, fileName, su.logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytesFile, nil
+}
+
+func saveFile(student models.Student, file io.Reader, fileName string, log *logrus.Logger) (string, error) {
+	path := sourcePath + strconv.Itoa(student.Id)
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.Mkdir(path, os.ModePerm)
 		if err != nil {
-			log.Errorf("can't create dir for student with userId %d: %s", student.UserId, err)
-			return err
+			log.Errorf("can't create dir for student with userId %d: %s", student.Id, err)
+			return "", err
 		}
 	}
 
 	fileOnDisk, err := os.Create(path + "/" + fileName)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer fileOnDisk.Close()
 
 	io.Copy(fileOnDisk, file)
 
-	return nil
+	return fileName, nil
+}
+
+func loadFile(id int, fileName string, log *logrus.Logger) ([]byte, error) {
+	path := sourcePath + strconv.Itoa(id)
+
+	fileBytes, err := ioutil.ReadFile(path + fileName)
+	if err != nil {
+		log.Errorf("loadFile: %s", err)
+		return nil, err
+	}
+	return fileBytes, nil
 }

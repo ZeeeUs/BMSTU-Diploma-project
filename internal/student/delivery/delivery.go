@@ -2,8 +2,6 @@ package delivery
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -142,19 +140,35 @@ func (sh *StudentHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Sprintf("%v", file)
-
-	//responses.SendData(w, photo)
+	jsnFile, _ := json.Marshal(file)
 	w.WriteHeader(http.StatusOK)
+	w.Write(jsnFile)
 }
 
 func (sh *StudentHandler) LoadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 
-	fileBytes, err := ioutil.ReadFile("/home/zeus/BMSTU-Diploma-project/test.png")
-	if err != nil {
-		panic(err)
+	student, ok := r.Context().Value("student").(models.Student)
+	if !ok {
+		sh.logger.Errorf("Problem with get value from cookie %v", ok)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
+
+	var fileName string
+	err := json.NewDecoder(r.Body).Decode(&fileName)
+	if err != nil {
+		sh.logger.Errorf("UserLogin: failed read json with error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	fileBytes, err := sh.StudentUsecase.LoadFile(r.Context(), student, fileName)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(fileBytes)
 	return
