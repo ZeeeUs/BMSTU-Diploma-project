@@ -41,5 +41,32 @@ from test_db.student_event as se,
 where se.student_id = stud.id
   and stud.user_id = usr.id
   and se.event_id = evs.id
-  and se.event_status = evst.id
   and evs.course_id = cs.id;
+
+-- Get groups by course id
+create or replace view test_db.get_groups_by_course_v as
+select gc.group_id,
+       gc.course_id,
+       g.group_code,
+       c.semester,
+       c.course_name
+from test_db.group_course as gc,
+     test_db.groups as g,
+     test_db.courses as c
+where gc.course_id = c.id
+  and gc.group_id = g.id;
+
+-- Get students by group
+create or replace view test_db.get_stud_by_gr_v as
+select st.id as stud_id,
+       st.user_id,
+       st.group_id,
+       us.firstname,
+       us.lastname,
+       us.middle_name,
+       us.email
+from test_db.students as st,
+     test_db.groups as g,
+     test_db.users as us
+where st.group_id = g.id
+  and st.user_id = us.id;

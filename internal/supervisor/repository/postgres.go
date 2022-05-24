@@ -12,6 +12,8 @@ import (
 type SupersRepository interface {
 	GetSupersCourses(ctx context.Context, id int) ([]models.Course, error)
 	GetSuperId(ctx context.Context, id int) (int, error)
+	GetGroupsByCourseId(ctx context.Context, id int) ([]models.GroupByCourse, error)
+	GetStudentsByGroup(ctx context.Context, groupId int) ([]models.StudentByGroup, error)
 }
 
 type supersRepo struct {
@@ -62,4 +64,65 @@ func (su *supersRepo) GetSuperId(ctx context.Context, id int) (int, error) {
 	}
 
 	return getId, nil
+}
+
+func (su *supersRepo) GetGroupsByCourseId(ctx context.Context, id int) ([]models.GroupByCourse, error) {
+	rows, err := su.conn.Query("select * from test_db.get_groups_by_course_v where course_id=$1", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var groups []models.GroupByCourse
+	for rows.Next() {
+		var group models.GroupByCourse
+
+		err := rows.Scan(
+			&group.GroupId,
+			&group.CourseId,
+			&group.GroupCode,
+			&group.Semester,
+			&group.CourseName,
+		)
+		if err != nil {
+			su.logger.Errorf("GetGroupsByCourseId: can't scan object: %s", err)
+			continue
+		}
+
+		groups = append(groups, group)
+	}
+
+	return groups, nil
+}
+
+func (su *supersRepo) GetStudentsByGroup(ctx context.Context, groupId int) ([]models.StudentByGroup, error) {
+	rows, err := su.conn.Query("select stud_id, user_id, group_id, firstname, lastname, middle_name, email"+
+		" from test_db.get_stud_by_gr_v where group_id=$1", groupId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []models.StudentByGroup
+	for rows.Next() {
+		var student models.StudentByGroup
+
+		err := rows.Scan(
+			&student.StudentId,
+			&student.UserId,
+			&student.GroupId,
+			&student.FirstName,
+			&student.LastName,
+			&student.MiddleName,
+			&student.Email,
+		)
+		if err != nil {
+			su.logger.Errorf("GetStudentsByGroup: can't scan object: %s", err)
+			continue
+		}
+
+		students = append(students, student)
+	}
+
+	return students, nil
 }

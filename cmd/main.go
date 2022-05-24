@@ -57,6 +57,12 @@ func main() {
 		Password:   cfg.RedisConfig.Password,
 		MaxRetries: cfg.RedisConfig.MaxRetries,
 	})
+	pong, err := rCClient.Ping().Result()
+	if err != nil {
+		log.Fatalf("redis: %s", err)
+	}
+	log.Infof("succsessfully connetc to redis: %s", pong)
+
 	rc := redisClient.New(rCClient)
 
 	// repositories
