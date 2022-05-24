@@ -2,7 +2,10 @@ package delivery
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/usecase"
@@ -16,6 +19,8 @@ type StudentHandler struct {
 	logger         *logrus.Logger
 }
 
+const maxFileSize = 20 * 1024 * 1025
+
 func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.StudentUsecase, m *middleware.Middleware) {
 	studentHandler := &StudentHandler{
 		StudentUsecase: su,
@@ -25,6 +30,8 @@ func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.Studen
 	router.HandleFunc("/api/v1/student", m.CheckCSRFAndGetStudent(studentHandler.GetStudent)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/table", m.CheckCSRFAndGetStudent(studentHandler.GetTable)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/group", m.CheckCSRFAndGetStudent(studentHandler.GetGroupByUserId)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/file", m.CheckCSRFAndGetStudent(studentHandler.UploadFile)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/file", m.CheckCSRFAndGetStudent(studentHandler.LoadFile)).Methods("GET", "OPTIONS")
 }
 
 func (sh *StudentHandler) GetStudent(w http.ResponseWriter, r *http.Request) {
@@ -104,4 +111,51 @@ func (sh *StudentHandler) GetGroupByUserId(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.Write(jsnTable)
+}
+
+func (sh *StudentHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(maxFileSize)
+	if err != nil {
+		sh.logger.Errorf("can't parse file: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	studentEventId, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		sh.logger.Errorf("can't get studentEventId from url: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	uploadedFile, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		sh.logger.Errorf("can't upload file: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer uploadedFile.Close()
+
+	file, err := sh.StudentUsecase.AddFile(r.Context(), uploadedFile, fileHeader.Filename, studentEventId)
+	if err != nil {
+		sh.logger.Errorf("%s", err)
+		return
+	}
+
+	fmt.Sprintf("%v", file)
+
+	//responses.SendData(w, photo)
+	w.WriteHeader(http.StatusOK)
+}
+
+func (sh *StudentHandler) LoadFile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/octet-stream")
+
+	fileBytes, err := ioutil.ReadFile("/home/zeus/BMSTU-Diploma-project/test.png")
+	if err != nil {
+		panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(fileBytes)
+	return
 }
