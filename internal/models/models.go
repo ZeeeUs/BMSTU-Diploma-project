@@ -81,3 +81,21 @@ type Event struct {
 	Files       []string    `json:"files"`
 	Comments    []string    `json:"comment"`
 }
+
+type GroupByCourse struct {
+	GroupId    int    `json:"groupId"`
+	CourseId   int    `json:"courseId"`
+	GroupCode  string `json:"groupCode"`
+	Semester   int    `json:"semester"`
+	CourseName string `json:"courseName"`
+}
+
+type StudentByGroup struct {
+	StudentId  int    `json:"studentId"`
+	UserId     int    `json:"userId"`
+	GroupId    int    `json:"groupId"`
+	FirstName  string `json:"firstName"`
+	MiddleName string `json:"middleName"`
+	LastName   string `json:"lastName"`
+	Email      string `json:"email"`
+}
