@@ -7,7 +7,6 @@ import (
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/usecase"
-	check "github.com/ZeeeUs/BMSTU-Diploma-project/pkg/checker"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/middleware"
 
 	"github.com/gorilla/mux"
@@ -25,30 +24,24 @@ func SetSupersRouting(router *mux.Router, log *logrus.Logger, su usecase.SupersU
 		logger:        log,
 	}
 
-	router.HandleFunc("/api/v1/supervisor/courses", m.CheckCSRFAndGetUser(check.Supervisor(supersHandler.GetSupersCourses))).Methods("GET", "OPTIONS")
-	router.HandleFunc("/api/v1/supervisor", m.CheckCSRFAndGetUser(check.Supervisor(supersHandler.GetSupers))).Methods("GET", "OPTIONS")
-	router.HandleFunc("/api/v1/course/{id:[0-9]+}/group", m.CheckCSRFAndGetUser(check.Supervisor(supersHandler.GetGroupsByCourseId))).Methods("GET", "OPTIONS")
-	router.HandleFunc("/api/v1/group/{id:[0-9]+}/students", m.CheckCSRFAndGetUser(check.Supervisor(supersHandler.GetStudentsByGroup))).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/supervisor/courses", m.CheckCSRFAndGetSuper(supersHandler.GetSupersCourses)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/supervisor", m.CheckCSRFAndGetSuper(supersHandler.GetSupers)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/course/{id:[0-9]+}/group", m.CheckCSRFAndGetSuper(supersHandler.GetGroupsByCourseId)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/group/{id:[0-9]+}/students", m.CheckCSRFAndGetSuper(supersHandler.GetStudentsByGroup)).Methods("GET", "OPTIONS")
+	//router.HandleFunc("/api/v1/course/{id:[0-9]+}/events", m.CheckCSRFAndGetSuper(supersHandler.GetEventsByCourse)).Methods("GET", "OPTIONS")
 }
 
 func (sh *SupersHandler) GetSupers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	curUser, ok := r.Context().Value("user").(models.User)
+	super, ok := r.Context().Value("supervisor").(models.Supervisor)
 	if !ok {
-		sh.logger.Errorf("Problem with get value from cookie %v", ok)
+		sh.logger.Errorf("Problem with get value from context %v", ok)
 		return
 	}
 
-	superId, err := sh.SupersUseCase.GetSuperId(r.Context(), curUser.Id)
-	if err != nil {
-		sh.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	jsnUsr, _ := json.Marshal(superId)
-	_, err = w.Write(jsnUsr)
+	jsnUsr, _ := json.Marshal(super)
+	_, err := w.Write(jsnUsr)
 	if err != nil {
 		sh.logger.Errorf("GetSupers: failed to write json: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -59,14 +52,14 @@ func (sh *SupersHandler) GetSupers(w http.ResponseWriter, r *http.Request) {
 func (sh *SupersHandler) GetSupersCourses(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	curUser, ok := r.Context().Value("superId").(models.User)
+	super, ok := r.Context().Value("supervisor").(models.Supervisor)
 	if !ok {
-		sh.logger.Errorf("Problem with get value from cookie %v", ok)
+		sh.logger.Errorf("Problem with get value from context %v", ok)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	courses, err := sh.SupersUseCase.GetSupersCourses(r.Context(), curUser.Id)
+	courses, err := sh.SupersUseCase.GetSupersCourses(r.Context(), super.UserId)
 	if err != nil {
 		sh.logger.Errorf("Problem with get courses")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -91,18 +84,6 @@ func (sh *SupersHandler) GetGroupsByCourseId(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		sh.logger.Errorf("can't get course id from url: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	curUser, ok := r.Context().Value("user").(models.User)
-	if !ok {
-		sh.logger.Errorf("Problem with get value from cookie %v", ok)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if !curUser.IsSuper {
-		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 

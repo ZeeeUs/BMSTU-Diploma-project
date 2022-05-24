@@ -53,12 +53,14 @@ type Group struct {
 }
 
 type Student struct {
-	Id         int    `json:"id"`
-	Firstname  string `json:"firstname"`
-	MiddleName string `json:"middleName"`
-	Lastname   string `json:"lastname"`
-	Email      string `json:"email"`
-	Group      Group  `json:"group"`
+	Id      int `json:"id"`
+	UserId  int `json:"userId"`
+	GroupId int `json:"groupId"`
+}
+
+type Supervisor struct {
+	Id     int `json:"id"`
+	UserId int `json:"userId"`
 }
 
 type Table struct {

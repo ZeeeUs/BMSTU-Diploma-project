@@ -22,56 +22,46 @@ func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.Studen
 		logger:         log,
 	}
 
-	router.HandleFunc("/api/v1/student", m.CheckCSRFAndGetUser(studentHandler.GetStudent)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/student", m.CheckCSRFAndGetStudent(studentHandler.GetStudent)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/table", m.CheckCSRFAndGetStudent(studentHandler.GetTable)).Methods("GET", "OPTIONS")
 }
 
 func (sh *StudentHandler) GetStudent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	curUser, ok := r.Context().Value("user").(models.User)
+	student, ok := r.Context().Value("student").(models.Student)
 	if !ok {
-		sh.logger.Errorf("Problem with get value from cookie %v", ok)
+		sh.logger.Errorf("Problem with get value from context %v", ok)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	group, studentId, err := sh.StudentUsecase.GetStudentGroup(r.Context(), curUser.Id)
-	if err != nil {
-		sh.logger.Errorf("Problem with get student group %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	//group, studentId, err := sh.StudentUsecase.GetStudentGroup(r.Context(), student.Id)
+	//if err != nil {
+	//	sh.logger.Errorf("Problem with get student group %s", err)
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
+	//
+	//student := models.Student{
+	//	Id: studentId,
+	//}
 
-	student := models.Student{
-		Id:         studentId,
-		Firstname:  curUser.Firstname,
-		MiddleName: curUser.MiddleName,
-		Lastname:   curUser.Lastname,
-		Email:      curUser.Email,
-		Group:      group,
-	}
-
-	jsnUsr, _ := json.Marshal(student)
-	_, err = w.Write(jsnUsr)
-	if err != nil {
-		sh.logger.Errorf("GetStudent: failed to write json: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	jsnStud, _ := json.Marshal(student)
+	w.Write(jsnStud)
 }
 
 func (sh *StudentHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-	studId, ok := r.Context().Value("studentId").(int)
+	student, ok := r.Context().Value("student").(models.Student)
 	if !ok {
 		sh.logger.Errorf("Problem with get value from cookie %v", ok)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	table, err := sh.StudentUsecase.GetTable(r.Context(), studId)
+	table, err := sh.StudentUsecase.GetTable(r.Context(), student.Id)
 	if err != nil {
 		sh.logger.Errorf("Can't get table for user: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)

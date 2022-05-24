@@ -153,14 +153,14 @@ func (perm *Permission) GetStudent(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		studentId, err := perm.ur.GetStudentId(r.Context(), id)
+		student, err := perm.ur.GetStudent(r.Context(), id)
 		if err != nil {
 			log.Errorf("Permissions.GetCurrentUser: failed GetUserById with [error: %s]", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		r = r.WithContext(context.WithValue(r.Context(), "studentId", studentId))
+		r = r.WithContext(context.WithValue(r.Context(), "student", student))
 		next.ServeHTTP(w, r)
 	})
 }
@@ -181,14 +181,15 @@ func (perm *Permission) GetSuper(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		superId, err := perm.ur.GetSuperId(r.Context(), id)
+		supervisor, err := perm.ur.GetSuper(r.Context(), id)
 		if err != nil {
 			log.Errorf("Permissions.GetCurrentUser: failed GetUserById with [error: %s]", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		r = r.WithContext(context.WithValue(r.Context(), "superId", superId))
+		// TODO
+		r = r.WithContext(context.WithValue(r.Context(), "supervisor", supervisor))
 		next.ServeHTTP(w, r)
 	})
 }
