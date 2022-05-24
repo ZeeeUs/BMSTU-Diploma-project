@@ -206,8 +206,8 @@ func (uh *UserHandler) newUserCookie(email string) (http.Cookie, error) {
 		Name:     "sessionId",
 		Value:    md5CookieValue,
 		Expires:  expiration,
-		Secure:   true,
-		HttpOnly: true,
+		Secure:   false,
+		HttpOnly: false,
 		Path:     "/",
 	}
 

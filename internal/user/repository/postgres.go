@@ -15,6 +15,8 @@ type UserRepository interface {
 	GetUserById(ctx context.Context, id int) (user models.User, err error)
 	GetStudentId(ctt context.Context, id int) (getId int, err error)
 	GetSuperId(ctt context.Context, id int) (getId int, err error)
+	GetStudent(ctt context.Context, id int) (student models.Student, err error)
+	GetSuper(ctt context.Context, id int) (supervisor models.Supervisor, err error)
 }
 
 type userRepository struct {
@@ -80,7 +82,7 @@ func (u *userRepository) GetUserById(ctx context.Context, id int) (user models.U
 }
 
 func (u *userRepository) GetStudentId(ctt context.Context, id int) (getId int, err error) {
-	err = u.conn.QueryRow("select user_id from test_db.students where id=$1", id).Scan(&getId)
+	err = u.conn.QueryRow("select user_id from test_db.students where user_id=$1", id).Scan(&getId)
 	if err != nil {
 		return 0, err
 	}
@@ -88,8 +90,33 @@ func (u *userRepository) GetStudentId(ctt context.Context, id int) (getId int, e
 	return
 }
 
+func (u *userRepository) GetStudent(ctt context.Context, id int) (student models.Student, err error) {
+	err = u.conn.QueryRow("select id, user_id, group_id from test_db.students where user_id=$1", id).Scan(
+		&student.Id,
+		&student.UserId,
+		&student.GroupId,
+	)
+	if err != nil {
+		return models.Student{}, err
+	}
+
+	return
+}
+
+func (u *userRepository) GetSuper(ctt context.Context, id int) (supervisor models.Supervisor, err error) {
+	err = u.conn.QueryRow("select id, user_id from test_db.supervisors where user_id=$1", id).Scan(
+		&supervisor.Id,
+		&supervisor.UserId,
+	)
+	if err != nil {
+		return models.Supervisor{}, err
+	}
+
+	return
+}
+
 func (u *userRepository) GetSuperId(ctt context.Context, id int) (getId int, err error) {
-	err = u.conn.QueryRow("select user_id from test_db.supervisors where id=$1", id).Scan(&getId)
+	err = u.conn.QueryRow("select user_id from test_db.supervisors where user_id=$1", id).Scan(&getId)
 	if err != nil {
 		return 0, err
 	}
