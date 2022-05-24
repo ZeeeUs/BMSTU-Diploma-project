@@ -28,7 +28,7 @@ func SetSupersRouting(router *mux.Router, log *logrus.Logger, su usecase.SupersU
 	router.HandleFunc("/api/v1/supervisor", m.CheckCSRFAndGetSuper(supersHandler.GetSupers)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/course/{id:[0-9]+}/group", m.CheckCSRFAndGetSuper(supersHandler.GetGroupsByCourseId)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/group/{id:[0-9]+}/students", m.CheckCSRFAndGetSuper(supersHandler.GetStudentsByGroup)).Methods("GET", "OPTIONS")
-	//router.HandleFunc("/api/v1/course/{id:[0-9]+}/events", m.CheckCSRFAndGetSuper(supersHandler.GetEventsByCourse)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/course/{id:[0-9]+}/events", m.CheckCSRFAndGetSuper(supersHandler.GetEventsByCourse)).Methods("GET", "OPTIONS")
 }
 
 func (sh *SupersHandler) GetSupers(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +126,34 @@ func (sh *SupersHandler) GetStudentsByGroup(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(jsnStudents)
+	if err != nil {
+		sh.logger.Errorf("GetGroupsByCourseId: failed to write json: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func (sh *SupersHandler) GetEventsByCourse(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	courseId, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		sh.logger.Errorf("can't get course id from url: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	events, err := sh.SupersUseCase.GetEventsByCourseId(r.Context(), courseId)
+	if err != nil {
+		sh.logger.Errorf("can't get gruops by set id: [id: %d]: %s", courseId, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	jsnGroups, _ := json.Marshal(events)
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(jsnGroups)
 	if err != nil {
 		sh.logger.Errorf("GetGroupsByCourseId: failed to write json: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)

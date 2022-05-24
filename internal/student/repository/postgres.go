@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"sort"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
 	"github.com/jackc/pgx"
@@ -11,6 +12,7 @@ import (
 type StudentRepository interface {
 	GetUserGroup(ctx context.Context, id int) (models.Group, int, error)
 	GetTable(ctx context.Context, id int) (table models.Table, err error)
+	GetGroup(ctx context.Context, id int) (group models.Group, err error)
 }
 
 type studentRepository struct {
@@ -41,9 +43,11 @@ func (sr *studentRepository) GetUserGroup(ctx context.Context, id int) (group mo
 
 func (sr *studentRepository) GetTable(ctx context.Context, id int) (models.Table, error) {
 	var (
-		cId   int
-		cName string
-		tbl   models.Table
+		cId     int
+		cName   string
+		tbl     models.Table
+		names   []string
+		cCourse []models.CCourse
 	)
 
 	doubleString := make(map[int]string, 0)
@@ -59,6 +63,7 @@ func (sr *studentRepository) GetTable(ctx context.Context, id int) (models.Table
 		rows.Scan(&cId, &cName)
 
 		doubleString[cId] = cName
+		names = append(names, cName)
 	}
 
 	for key, val := range doubleString {
@@ -98,19 +103,37 @@ func (sr *studentRepository) GetTable(ctx context.Context, id int) (models.Table
 		}
 
 		if events != nil {
-			tbl.Courses = append(tbl.Courses, models.CCourse{
+			cCourse = append(cCourse, models.CCourse{
 				CourseId:   key,
 				CourseName: val,
 				Events:     events,
 			})
 		}
 
-		//sort.Slice(tbl, func(i, j int) bool {
-		//	return tbl.Courses[i].CourseName < tbl.Courses[j].CourseName
-		//})
-
 		rrows.Close()
 	}
 
+	sort.Strings(names)
+	for _, v := range names {
+		for _, val := range cCourse {
+			if v == val.CourseName {
+				tbl.Courses = append(tbl.Courses, val)
+			}
+		}
+	}
+
 	return tbl, nil
+}
+
+func (sr *studentRepository) GetGroup(ctx context.Context, id int) (group models.Group, err error) {
+	err = sr.conn.QueryRow("select id, group_code from test_db.student_group_v where user_id=$1", id).Scan(
+		&group.Id,
+		&group.GroupCode,
+	)
+
+	if err != nil {
+		return models.Group{}, err
+	}
+
+	return
 }

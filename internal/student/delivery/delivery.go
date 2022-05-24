@@ -24,6 +24,7 @@ func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.Studen
 
 	router.HandleFunc("/api/v1/student", m.CheckCSRFAndGetStudent(studentHandler.GetStudent)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/table", m.CheckCSRFAndGetStudent(studentHandler.GetTable)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/user/{id:[0-9]+}/group", m.CheckCSRFAndGetStudent(studentHandler.GetGroupByUserId)).Methods("GET", "OPTIONS")
 }
 
 func (sh *StudentHandler) GetStudent(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +63,33 @@ func (sh *StudentHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	table, err := sh.StudentUsecase.GetTable(r.Context(), student.Id)
+	if err != nil {
+		sh.logger.Errorf("Can't get table for user: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	jsnTable, err := json.Marshal(table)
+	if err != nil {
+		sh.logger.Errorf("Can't marshal user table: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(jsnTable)
+}
+
+func (sh *StudentHandler) GetGroupByUserId(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	student, ok := r.Context().Value("student").(models.Student)
+	if !ok {
+		sh.logger.Errorf("Problem with get value from cookie %v", ok)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	table, err := sh.StudentUsecase.GetGroup(r.Context(), student.Id)
 	if err != nil {
 		sh.logger.Errorf("Can't get table for user: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
