@@ -88,7 +88,7 @@ func (su *studentUsecase) AddFile(c context.Context, file io.Reader, fileName st
 }
 
 func saveFile(student models.Student, file io.Reader, fileName string, log *logrus.Logger) error {
-	path := "/home/zeus/BMSTU-Diploma-project/" + strconv.Itoa(student.UserId)
+	path := "/usr/src/app/upload_files" + strconv.Itoa(student.UserId)
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.Mkdir(path, os.ModePerm)
