@@ -49,7 +49,7 @@ type Course struct {
 
 type Group struct {
 	Id        int    `json:"id"`
-	GroupCode string `json:"groupСode"`
+	GroupCode string `json:"groupCode"`
 }
 
 type Student struct {
@@ -100,4 +100,8 @@ type StudentByGroup struct {
 	MiddleName string `json:"middleName"`
 	LastName   string `json:"lastName"`
 	Email      string `json:"email"`
+}
+
+type File struct {
+	File string `json:"file"`
 }

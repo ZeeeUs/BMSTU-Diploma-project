@@ -246,8 +246,8 @@ def fillStudentEvents(connection, eventCourses, groupCourses, students):
                         for ev in course["events"]:
                             eventStudent = {
                                 "studentId": student["id"],
+                                "eventStatus": randint(0, 6),
                                 "eventId": ev["id"],
-                                "eventStatus": 0,
                             }
                             # добавляем в бд получаем айдишник
                             # eventStudent["id"] = 0
@@ -268,6 +268,12 @@ try:
                                   host="127.0.0.1",
                                   port="5432",
                                   database="bdb")
+    # connection = psycopg2.connect(user="bmstuUser",
+    #                               # пароль, который указали при установке PostgreSQL
+    #                               password="pgpwd4bmstu",
+    #                               host="127.0.0.1",
+    #                               port="5432",
+    #                               database="bmstuDb")
 
     groups = fillGroups(connection)
     students = fillStudents(connection, groups)
