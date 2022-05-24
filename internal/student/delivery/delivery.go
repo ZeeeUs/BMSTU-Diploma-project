@@ -24,7 +24,7 @@ func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.Studen
 
 	router.HandleFunc("/api/v1/student", m.CheckCSRFAndGetStudent(studentHandler.GetStudent)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/table", m.CheckCSRFAndGetStudent(studentHandler.GetTable)).Methods("GET", "OPTIONS")
-	router.HandleFunc("/api/v1/user/{id:[0-9]+}/group", m.CheckCSRFAndGetStudent(studentHandler.GetGroupByUserId)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/student/group", m.CheckCSRFAndGetStudent(studentHandler.GetGroupByUserId)).Methods("GET", "OPTIONS")
 }
 
 func (sh *StudentHandler) GetStudent(w http.ResponseWriter, r *http.Request) {
