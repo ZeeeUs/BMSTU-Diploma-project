@@ -49,7 +49,7 @@ type Course struct {
 
 type Group struct {
 	Id        int    `json:"id"`
-	GroupCode string `json:"group_code"`
+	GroupCode string `json:"groupСode"`
 }
 
 type Student struct {
