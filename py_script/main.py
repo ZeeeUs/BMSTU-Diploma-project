@@ -214,14 +214,14 @@ def fillEvents(connection, courses):
             event = {
                 "courseId": course["id"],
                 "eventName": f"Лаб {i + 1}",
-                "eventDate": "2022-09-01",
-                "deadline": "2022-10-01",
+                "eventDate": f"2022-05-{1+i}",
+                "deadline": f"2022-06-{1+i}",
                 "description": fake.text(),
             }
             # вставляем в бд добавляем айдишник
-            insert_query = """ INSERT INTO test_db.events (course_id, event_name, event_date, deadline)
-            VALUES (%s, %s, %s, %s) returning id;"""
-            cursor.execute(insert_query, (event["courseId"], event["eventName"], event["eventDate"], event["deadline"]))
+            insert_query = """ INSERT INTO test_db.events (course_id, event_name, event_date, deadline, description)
+            VALUES (%s, %s, %s, %s, %s) returning id;"""
+            cursor.execute(insert_query, (event["courseId"], event["eventName"], event["eventDate"], event["deadline"], event["description"]))
             connection.commit()
             id = cursor.fetchone()[0]
             event["id"] = id

@@ -18,6 +18,8 @@ type SupersHandler struct {
 	logger        *logrus.Logger
 }
 
+const sourcePath = "/usr/src/app/upload_files/"
+
 func SetSupersRouting(router *mux.Router, log *logrus.Logger, su usecase.SupersUsecase, m *middleware.Middleware) {
 	supersHandler := &SupersHandler{
 		SupersUseCase: su,
@@ -29,6 +31,8 @@ func SetSupersRouting(router *mux.Router, log *logrus.Logger, su usecase.SupersU
 	router.HandleFunc("/api/v1/course/{id:[0-9]+}/group", m.CheckCSRFAndGetSuper(supersHandler.GetGroupsByCourseId)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/group/{id:[0-9]+}/students", m.CheckCSRFAndGetSuper(supersHandler.GetStudentsByGroup)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/course/{id:[0-9]+}/events", m.CheckCSRFAndGetSuper(supersHandler.GetEventsByCourse)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/supervisor/student/{id:[0-9]+}/file/{fileName}", m.CheckCSRFAndGetSuper(supersHandler.DownloadFile)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/supervisor/student/{studentId}/course/{courseId}", m.CheckCSRFAndGetSuper(supersHandler.GetStudentEventsByCourse)).Methods("GET", "OPTIONS")
 }
 
 func (sh *SupersHandler) GetSupers(w http.ResponseWriter, r *http.Request) {
@@ -159,4 +163,45 @@ func (sh *SupersHandler) GetEventsByCourse(w http.ResponseWriter, r *http.Reques
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (sh *SupersHandler) DownloadFile(w http.ResponseWriter, r *http.Request) {
+
+	nameFromUrl := mux.Vars(r)["fileName"]
+	studId := mux.Vars(r)["id"]
+	if nameFromUrl == "" || studId == "" {
+		sh.logger.Infof("can't get vals from url: fileName - %s, id - %s", nameFromUrl, studId)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	path := sourcePath + studId + "/" + nameFromUrl
+	http.ServeFile(w, r, path)
+	return
+}
+
+func (sh *SupersHandler) GetStudentEventsByCourse(w http.ResponseWriter, r *http.Request) {
+	studentId, err := strconv.Atoi(mux.Vars(r)["studentId"])
+	if err != nil {
+		sh.logger.Errorf("can't get student id from url: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	courseId, err := strconv.Atoi(mux.Vars(r)["courseId"])
+	if err != nil {
+		sh.logger.Errorf("can't get course id from url: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	events, err := sh.SupersUseCase.GetStudentEvents(r.Context(), studentId, courseId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	jsnEvents, _ := json.Marshal(events)
+	w.Write(jsnEvents)
+
 }

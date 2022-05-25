@@ -17,7 +17,12 @@ type StudentHandler struct {
 	logger         *logrus.Logger
 }
 
-const maxFileSize = 20 * 1024 * 1025
+const (
+	maxFileSize = 20 * 1024 * 1025
+	sourcePath  = "/usr/src/app/upload_files/"
+)
+
+//const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
 
 func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.StudentUsecase, m *middleware.Middleware) {
 	studentHandler := &StudentHandler{
@@ -29,7 +34,8 @@ func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.Studen
 	router.HandleFunc("/api/v1/student/table", m.CheckCSRFAndGetStudent(studentHandler.GetTable)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/group", m.CheckCSRFAndGetStudent(studentHandler.GetGroupByUserId)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/file", m.CheckCSRFAndGetStudent(studentHandler.UploadFile)).Methods("POST", "OPTIONS")
-	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/file", m.CheckCSRFAndGetStudent(studentHandler.LoadFile)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/student/file/{fileName}", m.CheckCSRFAndGetStudent(studentHandler.LoadFile)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/status", m.CheckCSRFAndGetStudent(studentHandler.ChangeEventStatus)).Methods("PUT", "OPTIONS")
 }
 
 func (sh *StudentHandler) GetStudent(w http.ResponseWriter, r *http.Request) {
@@ -137,6 +143,7 @@ func (sh *StudentHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	file, err := sh.StudentUsecase.AddFile(r.Context(), uploadedFile, fileHeader.Filename, studentEventId)
 	if err != nil {
 		sh.logger.Errorf("%s", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -145,31 +152,47 @@ func (sh *StudentHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsnFile)
 }
 
+// Скачивание файла
 func (sh *StudentHandler) LoadFile(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/octet-stream")
+	//w.Header().Set("Content-Type", "application/octet-stream")
+
+	nameFromUrl := mux.Vars(r)["fileName"]
 
 	student, ok := r.Context().Value("student").(models.Student)
 	if !ok {
-		sh.logger.Errorf("Problem with get value from cookie %v", ok)
+		sh.logger.Errorf("Problem with get value from contetxt %v", ok)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	var fileName string
-	err := json.NewDecoder(r.Body).Decode(&fileName)
+	path := sourcePath + strconv.Itoa(student.Id) + "/" + nameFromUrl
+	http.ServeFile(w, r, path)
+	return
+}
+
+func (sh *StudentHandler) ChangeEventStatus(w http.ResponseWriter, r *http.Request) {
+	var status models.EventStatus
+
+	studentEventId, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
-		sh.logger.Errorf("UserLogin: failed read json with error: %s", err)
+		sh.logger.Errorf("can't get studentEventId from url: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&status)
+	if err != nil {
+		sh.logger.Errorf("can't decode status from request: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	fileBytes, err := sh.StudentUsecase.LoadFile(r.Context(), student, fileName)
+	err = sh.StudentUsecase.ChangeEventStatus(r.Context(), status.Status, studentEventId)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		sh.logger.Errorf("can't change event status on db: %s", err)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(fileBytes)
-	return
 }

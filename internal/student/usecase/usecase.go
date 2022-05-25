@@ -22,6 +22,7 @@ type StudentUsecase interface {
 	GetGroup(ctx context.Context, id int) (models.Group, error)
 	AddFile(c context.Context, file io.Reader, fileName string, studentEventId int) (models.File, error)
 	LoadFile(ctx context.Context, student models.Student, fileName string) ([]byte, error)
+	ChangeEventStatus(ctx context.Context, status int, studentEventId int) error
 }
 
 type studentUsecase struct {
@@ -83,13 +84,11 @@ func (su *studentUsecase) AddFile(c context.Context, file io.Reader, fileName st
 		return models.File{}, err
 	}
 
-	// TODO запись в бд filePath - studentEventId, вернуть название файла, доделать скачивание, РУЧКА
-	//err = h.UserRepo.UpdateImgs(c, currentUser.ID, currentUser.Imgs)
-	//if err != nil {
-	//	return models.File{}, err
-	//}
+	err = su.StudentRepository.AddFileName(ctx, fileName, studentEventId)
+	if err != nil {
+		return models.File{}, err
+	}
 
-	//return models.File{File: filePath}, nil
 	return models.File{File: savedFaileName}, nil
 }
 
@@ -100,6 +99,15 @@ func (su *studentUsecase) LoadFile(ctx context.Context, student models.Student, 
 	}
 
 	return bytesFile, nil
+}
+
+func (su *studentUsecase) ChangeEventStatus(ctx context.Context, status int, studEvent int) error {
+	err := su.StudentRepository.ChangeEventStatus(ctx, status, studEvent)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func saveFile(student models.Student, file io.Reader, fileName string, log *logrus.Logger) (string, error) {
@@ -127,7 +135,7 @@ func saveFile(student models.Student, file io.Reader, fileName string, log *logr
 func loadFile(id int, fileName string, log *logrus.Logger) ([]byte, error) {
 	path := sourcePath + strconv.Itoa(id)
 
-	fileBytes, err := ioutil.ReadFile(path + fileName)
+	fileBytes, err := ioutil.ReadFile(path + "/" + fileName)
 	if err != nil {
 		log.Errorf("loadFile: %s", err)
 		return nil, err
