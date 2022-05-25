@@ -17,9 +17,10 @@ type StudentHandler struct {
 	logger         *logrus.Logger
 }
 
-const maxFileSize = 20 * 1024 * 1025
-
-const sourcePath = "/usr/src/app/upload_files/"
+const (
+	maxFileSize = 20 * 1024 * 1025
+	sourcePath  = "/usr/src/app/upload_files/"
+)
 
 //const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
 
@@ -159,7 +160,7 @@ func (sh *StudentHandler) LoadFile(w http.ResponseWriter, r *http.Request) {
 
 	student, ok := r.Context().Value("student").(models.Student)
 	if !ok {
-		sh.logger.Errorf("Problem with get value from cookie %v", ok)
+		sh.logger.Errorf("Problem with get value from contetxt %v", ok)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

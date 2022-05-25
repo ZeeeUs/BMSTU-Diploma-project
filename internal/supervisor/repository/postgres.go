@@ -15,6 +15,7 @@ type SupersRepository interface {
 	GetGroupsByCourseId(ctx context.Context, id int) ([]models.GroupByCourse, error)
 	GetStudentsByGroup(ctx context.Context, groupId int) ([]models.StudentByGroup, error)
 	GetEventsByCourseId(ctx context.Context, id int) ([]models.Event, error)
+	GetStudentEvents(ctx context.Context, studentId int, courseId int) ([]models.StudentEvent, error)
 }
 
 type supersRepo struct {
@@ -148,6 +149,48 @@ func (su *supersRepo) GetEventsByCourseId(ctx context.Context, id int) ([]models
 		)
 		if err != nil {
 			su.logger.Errorf("GetGroupsByCourseId: can't scan object: %s", err)
+			continue
+		}
+
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+func (su *supersRepo) GetStudentEvents(ctx context.Context, studentId int, courseId int) ([]models.StudentEvent, error) {
+	rows, err := su.conn.Query("select student_event.id,"+
+		" student_event.student_id,"+
+		" student_event.event_id,"+
+		" student_event.upload_files,"+
+		" student_event.event_status"+
+		" from test_db.students,"+
+		" test_db.student_event,"+
+		" test_db.events,"+
+		" test_db.courses"+
+		" where student_event.student_id = students.id"+
+		" and student_event.event_id = events.id"+
+		" and events.course_id = courses.id"+
+		" and student_id = $1"+
+		" and course_id = $2", studentId, courseId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.StudentEvent
+	for rows.Next() {
+		var event models.StudentEvent
+
+		err := rows.Scan(
+			&event.Id,
+			&event.StudentId,
+			&event.EventId,
+			&event.UploadFiles,
+			&event.Status,
+		)
+		if err != nil {
+			su.logger.Errorf("GetStudentEvents: can't scan object: %s", err)
 			continue
 		}
 

@@ -262,18 +262,18 @@ def fillStudentEvents(connection, eventCourses, groupCourses, students):
 try:
     # Подключиться к существующей базе данных
     print(1)
-    # connection = psycopg2.connect(user="buser",
-    #                               # пароль, который указали при установке PostgreSQL
-    #                               password="bpassword",
-    #                               host="127.0.0.1",
-    #                               port="5432",
-    #                               database="bdb")
-    connection = psycopg2.connect(user="bmstuUser",
+    connection = psycopg2.connect(user="buser",
                                   # пароль, который указали при установке PostgreSQL
-                                  password="pgpwd4bmstu",
+                                  password="bpassword",
                                   host="127.0.0.1",
                                   port="5432",
-                                  database="bmstuDb")
+                                  database="bdb")
+    # connection = psycopg2.connect(user="bmstuUser",
+    #                               # пароль, который указали при установке PostgreSQL
+    #                               password="pgpwd4bmstu",
+    #                               host="127.0.0.1",
+    #                               port="5432",
+    #                               database="bmstuDb")
 
     groups = fillGroups(connection)
     students = fillStudents(connection, groups)
