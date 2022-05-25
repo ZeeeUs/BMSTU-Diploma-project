@@ -19,8 +19,9 @@ type StudentHandler struct {
 
 const maxFileSize = 20 * 1024 * 1025
 
-//const sourcePath = "/usr/src/app/upload_files/"
-const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
+const sourcePath = "/usr/src/app/upload_files/"
+
+//const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
 
 func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.StudentUsecase, m *middleware.Middleware) {
 	studentHandler := &StudentHandler{
