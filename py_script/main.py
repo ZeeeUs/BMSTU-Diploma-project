@@ -214,14 +214,14 @@ def fillEvents(connection, courses):
             event = {
                 "courseId": course["id"],
                 "eventName": f"Лаб {i + 1}",
-                "eventDate": "2022-09-01",
-                "deadline": "2022-10-01",
+                "eventDate": f"2022-05-{1+i}",
+                "deadline": f"2022-06-{1+i}",
                 "description": fake.text(),
             }
             # вставляем в бд добавляем айдишник
-            insert_query = """ INSERT INTO test_db.events (course_id, event_name, event_date, deadline)
-            VALUES (%s, %s, %s, %s) returning id;"""
-            cursor.execute(insert_query, (event["courseId"], event["eventName"], event["eventDate"], event["deadline"]))
+            insert_query = """ INSERT INTO test_db.events (course_id, event_name, event_date, deadline, description)
+            VALUES (%s, %s, %s, %s, %s) returning id;"""
+            cursor.execute(insert_query, (event["courseId"], event["eventName"], event["eventDate"], event["deadline"], event["description"]))
             connection.commit()
             id = cursor.fetchone()[0]
             event["id"] = id
@@ -262,18 +262,18 @@ def fillStudentEvents(connection, eventCourses, groupCourses, students):
 try:
     # Подключиться к существующей базе данных
     print(1)
-    connection = psycopg2.connect(user="buser",
-                                  # пароль, который указали при установке PostgreSQL
-                                  password="bpassword",
-                                  host="127.0.0.1",
-                                  port="5432",
-                                  database="bdb")
-    # connection = psycopg2.connect(user="bmstuUser",
+    # connection = psycopg2.connect(user="buser",
     #                               # пароль, который указали при установке PostgreSQL
-    #                               password="pgpwd4bmstu",
+    #                               password="bpassword",
     #                               host="127.0.0.1",
     #                               port="5432",
-    #                               database="bmstuDb")
+    #                               database="bdb")
+    connection = psycopg2.connect(user="bmstuUser",
+                                  # пароль, который указали при установке PostgreSQL
+                                  password="pgpwd4bmstu",
+                                  host="127.0.0.1",
+                                  port="5432",
+                                  database="bmstuDb")
 
     groups = fillGroups(connection)
     students = fillStudents(connection, groups)

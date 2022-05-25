@@ -105,3 +105,7 @@ type StudentByGroup struct {
 type File struct {
 	File string `json:"file"`
 }
+
+type EventStatus struct {
+	Status int `json:"status"`
+}

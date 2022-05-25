@@ -39,7 +39,7 @@ CREATE TABLE test_db.student_event
     id           serial PRIMARY KEY NOT NULL,
     student_id   int                not null,
     event_id     int                not null,
-    upload_files text,
+    upload_files text[],
     grade        int,
     event_status int
 );

@@ -13,6 +13,8 @@ type StudentRepository interface {
 	GetUserGroup(ctx context.Context, id int) (models.Group, int, error)
 	GetTable(ctx context.Context, id int) (table models.Table, err error)
 	GetGroup(ctx context.Context, id int) (group models.Group, err error)
+	AddFileName(ctx context.Context, fileName string, studentEventId int) error
+	ChangeEventStatus(ctx context.Context, status int, studEventId int) error
 }
 
 type studentRepository struct {
@@ -136,4 +138,25 @@ func (sr *studentRepository) GetGroup(ctx context.Context, id int) (group models
 	}
 
 	return
+}
+
+func (sr *studentRepository) AddFileName(ctx context.Context, fileName string, studentEventId int) error {
+	_, err := sr.conn.Exec("update test_db.student_event set upload_files=array_append(upload_files, $1)"+
+		" where id=$2", fileName, studentEventId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (sr *studentRepository) ChangeEventStatus(ctx context.Context, status int, studEventId int) error {
+	_, err := sr.conn.Exec("update test_db.student_event set event_status=$1 where id=$2", status, studEventId)
+	if err != nil {
+		return err
+	}
+
+	sr.logger.Infof("event_status = %d\nid = %d\n", status, studEventId)
+
+	return nil
 }
