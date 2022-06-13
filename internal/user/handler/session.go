@@ -1,4 +1,4 @@
-package delivery
+package handler
 
 type UserSession struct {
 }

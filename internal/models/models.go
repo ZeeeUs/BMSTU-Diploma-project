@@ -1,6 +1,7 @@
 package models
 
 import (
+	"io"
 	"time"
 
 	"github.com/jackc/pgx/pgtype"
@@ -117,4 +118,10 @@ type StudentEvent struct {
 	Status      int      `json:"status"`
 	UploadFiles []string `json:"uploadFiles"`
 	Comments    []string `json:"comment"`
+}
+
+type FileUnit struct {
+	Payload     io.Reader
+	PayloadName string
+	PayloadSize int64
 }

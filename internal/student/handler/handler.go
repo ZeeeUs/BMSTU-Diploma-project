@@ -16,7 +16,7 @@ import (
 
 type StudentHandler struct {
 	StudentUseCase suc.StudentUseCase
-	MinIOUseCase   muc.MinIOUseCase
+	MinioUseCase   muc.MinioUseCase
 	logger         *logrus.Logger
 }
 
@@ -25,9 +25,10 @@ const (
 	sourcePath  = "/usr/src/app/upload_files/"
 )
 
-func SetStudentRouting(router *mux.Router, log *logrus.Logger, su suc.StudentUseCase, m *middleware.Middleware) {
+func SetStudentRouting(router *mux.Router, log *logrus.Logger, su suc.StudentUseCase, mu muc.MinioUseCase, m *middleware.Middleware) {
 	studentHandler := &StudentHandler{
 		StudentUseCase: su,
+		MinioUseCase:   mu,
 		logger:         log,
 	}
 
@@ -128,18 +129,24 @@ func (sh *StudentHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	file := models.FileUnit{
+		PayloadSize: fileHeader.Size,
+		Payload:     uploadedFile,
+	}
 	defer uploadedFile.Close()
 
-	file, err := sh.StudentUseCase.AddFile(r.Context(), uploadedFile, fileHeader.Filename, studentEventId)
+	//fmt.Sprintf("%v%v", file, studentEventId)
+	//sh.logger.Info(file.PayloadSize)
+	//sh.logger.Info(file, studentEventId)
+	err = sh.MinioUseCase.UploadFile(r.Context(), file, studentEventId)
 	if err != nil {
-		sh.logger.Errorf("%s", err)
+		sh.logger.Errorf("can't upload file: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	jsnFile, _ := json.Marshal(file)
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsnFile)
 }
 
 // Скачивание файла

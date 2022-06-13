@@ -1,4 +1,4 @@
-package repository
+package storage
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type UserRepository interface {
+type UserStorage interface {
 	GetUserByEmail(ctx context.Context, email string) (models.User, error)
 	UpdateUser(ctx context.Context, pswd string, email string) (id int, err error)
 	GetUserById(ctx context.Context, id int) (user models.User, err error)
@@ -19,19 +19,19 @@ type UserRepository interface {
 	GetSuper(ctt context.Context, id int) (supervisor models.Supervisor, err error)
 }
 
-type userRepository struct {
+type userStorage struct {
 	conn   *pgx.ConnPool
 	logger *logrus.Logger
 }
 
-func NewUserRepository(pgConn *pgx.ConnPool, logger *logrus.Logger) UserRepository {
-	return &userRepository{
+func NewUserStorage(pgConn *pgx.ConnPool, logger *logrus.Logger) UserStorage {
+	return &userStorage{
 		conn:   pgConn,
 		logger: logger,
 	}
 }
 
-func (u *userRepository) GetUserByEmail(ctx context.Context, email string) (user models.User, err error) {
+func (u *userStorage) GetUserByEmail(ctx context.Context, email string) (user models.User, err error) {
 	err = u.conn.QueryRow("select id, password, pass_status, firstname, middle_name, lastname, email, is_super from test_db.users"+
 		" where email=$1", email).Scan(
 		&user.Id,
@@ -51,7 +51,7 @@ func (u *userRepository) GetUserByEmail(ctx context.Context, email string) (user
 	return
 }
 
-func (u *userRepository) UpdateUser(ctx context.Context, pswd string, email string) (id int, err error) {
+func (u *userStorage) UpdateUser(ctx context.Context, pswd string, email string) (id int, err error) {
 	err = u.conn.QueryRow("update test_db.users"+
 		" set password=$1, pass_status=true"+
 		" where email=$2 returning id", pswd, email).Scan(&id)
@@ -61,7 +61,7 @@ func (u *userRepository) UpdateUser(ctx context.Context, pswd string, email stri
 	return
 }
 
-func (u *userRepository) GetUserById(ctx context.Context, id int) (user models.User, err error) {
+func (u *userStorage) GetUserById(ctx context.Context, id int) (user models.User, err error) {
 	err = u.conn.QueryRow("select id, password, pass_status, firstname, middle_name, lastname, email, is_super from test_db.users"+
 		" where id=$1", id).Scan(
 		&user.Id,
@@ -81,7 +81,7 @@ func (u *userRepository) GetUserById(ctx context.Context, id int) (user models.U
 	return
 }
 
-func (u *userRepository) GetStudentId(ctt context.Context, id int) (getId int, err error) {
+func (u *userStorage) GetStudentId(ctt context.Context, id int) (getId int, err error) {
 	err = u.conn.QueryRow("select user_id from test_db.students where user_id=$1", id).Scan(&getId)
 	if err != nil {
 		return 0, err
@@ -90,7 +90,7 @@ func (u *userRepository) GetStudentId(ctt context.Context, id int) (getId int, e
 	return
 }
 
-func (u *userRepository) GetStudent(ctt context.Context, id int) (student models.Student, err error) {
+func (u *userStorage) GetStudent(ctt context.Context, id int) (student models.Student, err error) {
 	err = u.conn.QueryRow("select id, user_id, group_id from test_db.students where user_id=$1", id).Scan(
 		&student.Id,
 		&student.UserId,
@@ -103,7 +103,7 @@ func (u *userRepository) GetStudent(ctt context.Context, id int) (student models
 	return
 }
 
-func (u *userRepository) GetSuper(ctt context.Context, id int) (supervisor models.Supervisor, err error) {
+func (u *userStorage) GetSuper(ctt context.Context, id int) (supervisor models.Supervisor, err error) {
 	err = u.conn.QueryRow("select id, user_id from test_db.supervisors where user_id=$1", id).Scan(
 		&supervisor.Id,
 		&supervisor.UserId,
@@ -115,7 +115,7 @@ func (u *userRepository) GetSuper(ctt context.Context, id int) (supervisor model
 	return
 }
 
-func (u *userRepository) GetSuperId(ctt context.Context, id int) (getId int, err error) {
+func (u *userStorage) GetSuperId(ctt context.Context, id int) (getId int, err error) {
 	err = u.conn.QueryRow("select user_id from test_db.supervisors where user_id=$1", id).Scan(&getId)
 	if err != nil {
 		return 0, err

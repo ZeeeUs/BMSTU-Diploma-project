@@ -1,4 +1,4 @@
-package delivery
+package handler
 
 import (
 	"crypto/md5"
@@ -13,9 +13,9 @@ import (
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/usecase"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/hasher"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/middleware"
-	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 type UserHandler struct {

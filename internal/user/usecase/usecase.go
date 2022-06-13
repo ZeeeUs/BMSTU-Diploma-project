@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
-	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/repository"
+	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/storage"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/hasher"
 	"github.com/sirupsen/logrus"
 
@@ -22,12 +22,12 @@ type UserUsecase interface {
 }
 
 type userUsecase struct {
-	UserRepository repository.UserRepository
+	UserRepository storage.UserStorage
 	Timeout        time.Duration
 	logger         *logrus.Logger
 }
 
-func NewUserUsecase(ur repository.UserRepository, timeout time.Duration, log *logrus.Logger) UserUsecase {
+func NewUserUsecase(ur storage.UserStorage, timeout time.Duration, log *logrus.Logger) UserUsecase {
 	return &userUsecase{
 		UserRepository: ur,
 		Timeout:        timeout,

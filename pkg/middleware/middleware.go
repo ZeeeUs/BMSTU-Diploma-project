@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	userRepository "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/repository"
+	userRepository "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/storage"
 	uuid "github.com/nu7hatch/gouuid"
 	log "github.com/sirupsen/logrus"
 )
@@ -15,7 +15,7 @@ type Middleware struct {
 	permission Permission
 }
 
-func NewMiddleware(ur userRepository.UserRepository, sr userRepository.SessionRepository) *Middleware {
+func NewMiddleware(ur userRepository.UserStorage, sr userRepository.SessionStorage) *Middleware {
 	return &Middleware{
 		permission: Permission{
 			ur,
@@ -83,8 +83,8 @@ func (m Middleware) CheckCSRF(next http.HandlerFunc) http.HandlerFunc {
 }
 
 type Permission struct {
-	ur userRepository.UserRepository
-	sr userRepository.SessionRepository
+	ur userRepository.UserStorage
+	sr userRepository.SessionStorage
 }
 
 func (perm *Permission) CheckAuth(next http.HandlerFunc) http.HandlerFunc {

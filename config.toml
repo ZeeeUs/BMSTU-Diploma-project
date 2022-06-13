@@ -18,5 +18,5 @@ MaxRetries=5
 
 [MINIO]
 ENDPOINT="0.0.0.0:9000"
-ACCESS_KEY_ID="minio"
+ACCESS_KEY_ID="ozontech"
 SECRET_ACCESS_KEY="minio123"

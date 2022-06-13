@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
-	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/repository"
+	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/storage"
 
 	"github.com/jackc/pgx"
 	"github.com/sirupsen/logrus"
@@ -20,11 +20,11 @@ type SupersUsecase interface {
 }
 
 type supersUsecase struct {
-	SupersRepository repository.SupersRepository
+	SupersRepository storage.SupersStorage
 	logger           *logrus.Logger
 }
 
-func NewSupersUsecase(sr repository.SupersRepository, log *logrus.Logger) SupersUsecase {
+func NewSupersUsecase(sr storage.SupersStorage, log *logrus.Logger) SupersUsecase {
 	return &supersUsecase{
 		SupersRepository: sr,
 		logger:           log,

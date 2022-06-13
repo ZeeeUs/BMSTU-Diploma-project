@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
-	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/repository"
+	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/storage"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,12 +16,12 @@ type SessionUsecase interface {
 }
 
 type sessionUsecase struct {
-	Session        repository.SessionRepository
+	Session        storage.SessionStorage
 	contextTimeout time.Duration
 	logger         *logrus.Logger
 }
 
-func NewSessionUsecase(session repository.SessionRepository, timeout time.Duration, logger *logrus.Logger) SessionUsecase {
+func NewSessionUsecase(session storage.SessionStorage, timeout time.Duration, logger *logrus.Logger) SessionUsecase {
 	return &sessionUsecase{
 		Session:        session,
 		contextTimeout: timeout,

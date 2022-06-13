@@ -32,10 +32,17 @@ type RedisConfig struct {
 	MaxRetries int
 }
 
+type MinioConfig struct {
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+}
+
 type Config struct {
 	DbConfig     DbConfig
 	ServerConfig ServerConfig
 	RedisConfig  RedisConfig
+	MinioConfig  MinioConfig
 	Timeouts     TimeoutsConfig
 }
 
@@ -71,6 +78,11 @@ func NewConfig() *Config {
 			Addr:       viper.GetString("redis.addr"),
 			Password:   viper.GetString("redis.password"),
 			MaxRetries: viper.GetInt("redis.maxretries"),
+		},
+		MinioConfig: MinioConfig{
+			Endpoint:        viper.GetString("minio.endpoint"),
+			AccessKeyID:     viper.GetString("minio.access_key_id"),
+			SecretAccessKey: viper.GetString("minio.secret_access_key"),
 		},
 		Timeouts: TimeoutsConfig{
 			WriteTimeout:   5 * time.Second,

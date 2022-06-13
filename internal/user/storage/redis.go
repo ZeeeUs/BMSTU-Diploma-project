@@ -1,4 +1,4 @@
-package repository
+package storage
 
 import (
 	"context"
@@ -9,25 +9,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type SessionRepository interface {
+type SessionStorage interface {
 	NewSessionCookie(context.Context, string, int) error
 	GetSessionByToken(ctx context.Context, cookieVal string) (int, error)
 	DeleteSession(ctx context.Context, sessionId string) error
 }
 
-type sessionRepository struct {
+type sessionStorage struct {
 	RedisConnection redisClient.Client
 	logger          *logrus.Logger
 }
 
-func NewSessionRepository(conn redisClient.Client, log *logrus.Logger) SessionRepository {
-	return &sessionRepository{
+func NewSessionStorage(conn redisClient.Client, log *logrus.Logger) SessionStorage {
+	return &sessionStorage{
 		RedisConnection: conn,
 		logger:          log,
 	}
 }
 
-func (sr *sessionRepository) NewSessionCookie(ctx context.Context, sessionCookie string, id int) error {
+func (sr *sessionStorage) NewSessionCookie(ctx context.Context, sessionCookie string, id int) error {
 	err := sr.RedisConnection.Set(sessionCookie, id)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (sr *sessionRepository) NewSessionCookie(ctx context.Context, sessionCookie
 	return nil
 }
 
-func (sr *sessionRepository) GetSessionByToken(ctx context.Context, cookieVal string) (int, error) {
+func (sr *sessionStorage) GetSessionByToken(ctx context.Context, cookieVal string) (int, error) {
 	var id interface{}
 	id, err := sr.RedisConnection.GetValue(cookieVal)
 	if err != nil {
@@ -52,7 +52,7 @@ func (sr *sessionRepository) GetSessionByToken(ctx context.Context, cookieVal st
 	return newId, err
 }
 
-func (sr *sessionRepository) DeleteSession(ctx context.Context, sessionId string) error {
+func (sr *sessionStorage) DeleteSession(ctx context.Context, sessionId string) error {
 	err := sr.RedisConnection.DeleteKeyValue(sessionId)
 	if err != nil {
 		return err

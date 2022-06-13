@@ -1,4 +1,4 @@
-package repository
+package storage
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type SupersRepository interface {
+type SupersStorage interface {
 	GetSupersCourses(ctx context.Context, id int) ([]models.Course, error)
 	GetSuperId(ctx context.Context, id int) (int, error)
 	GetGroupsByCourseId(ctx context.Context, id int) ([]models.GroupByCourse, error)
@@ -18,19 +18,19 @@ type SupersRepository interface {
 	GetStudentEvents(ctx context.Context, studentId int, courseId int) ([]models.StudentEvent, error)
 }
 
-type supersRepo struct {
+type supersStorage struct {
 	conn   *pgx.ConnPool
 	logger *logrus.Logger
 }
 
-func NewSupersRepository(pgConn *pgx.ConnPool, log *logrus.Logger) SupersRepository {
-	return &supersRepo{
+func NewSupersStorage(pgConn *pgx.ConnPool, log *logrus.Logger) SupersStorage {
+	return &supersStorage{
 		conn:   pgConn,
 		logger: log,
 	}
 }
 
-func (su *supersRepo) GetSupersCourses(ctx context.Context, id int) ([]models.Course, error) {
+func (su *supersStorage) GetSupersCourses(ctx context.Context, id int) ([]models.Course, error) {
 	rows, err := su.conn.Query("select course_id, course_name, semester from test_db.supers_v where user_id=$1", id)
 	defer rows.Close()
 
@@ -57,7 +57,7 @@ func (su *supersRepo) GetSupersCourses(ctx context.Context, id int) ([]models.Co
 	return courses, nil
 }
 
-func (su *supersRepo) GetSuperId(ctx context.Context, id int) (int, error) {
+func (su *supersStorage) GetSuperId(ctx context.Context, id int) (int, error) {
 	var getId int
 	err := su.conn.QueryRow("select id from test_db.supervisors where user_id=$1", id).Scan(&getId)
 	su.logger.Info(id)
@@ -68,7 +68,7 @@ func (su *supersRepo) GetSuperId(ctx context.Context, id int) (int, error) {
 	return getId, nil
 }
 
-func (su *supersRepo) GetGroupsByCourseId(ctx context.Context, id int) ([]models.GroupByCourse, error) {
+func (su *supersStorage) GetGroupsByCourseId(ctx context.Context, id int) ([]models.GroupByCourse, error) {
 	rows, err := su.conn.Query("select * from test_db.get_groups_by_course_v where course_id=$1", id)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (su *supersRepo) GetGroupsByCourseId(ctx context.Context, id int) ([]models
 	return groups, nil
 }
 
-func (su *supersRepo) GetStudentsByGroup(ctx context.Context, groupId int) ([]models.StudentByGroup, error) {
+func (su *supersStorage) GetStudentsByGroup(ctx context.Context, groupId int) ([]models.StudentByGroup, error) {
 	rows, err := su.conn.Query("select stud_id, user_id, group_id, firstname, lastname, middle_name, email"+
 		" from test_db.get_stud_by_gr_v where group_id=$1", groupId)
 	if err != nil {
@@ -129,7 +129,7 @@ func (su *supersRepo) GetStudentsByGroup(ctx context.Context, groupId int) ([]mo
 	return students, nil
 }
 
-func (su *supersRepo) GetEventsByCourseId(ctx context.Context, id int) ([]models.Event, error) {
+func (su *supersStorage) GetEventsByCourseId(ctx context.Context, id int) ([]models.Event, error) {
 	rows, err := su.conn.Query("select id, event_name, event_date, deadline, description from test_db.events where course_id=$1", id)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func (su *supersRepo) GetEventsByCourseId(ctx context.Context, id int) ([]models
 	return events, nil
 }
 
-func (su *supersRepo) GetStudentEvents(ctx context.Context, studentId int, courseId int) ([]models.StudentEvent, error) {
+func (su *supersStorage) GetStudentEvents(ctx context.Context, studentId int, courseId int) ([]models.StudentEvent, error) {
 	rows, err := su.conn.Query("select student_event.id,"+
 		" student_event.student_id,"+
 		" student_event.event_id,"+

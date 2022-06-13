@@ -4,14 +4,16 @@ import (
 	"net/http"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/config"
+	minioStor "github.com/ZeeeUs/BMSTU-Diploma-project/internal/minio/storage"
+	minioCase "github.com/ZeeeUs/BMSTU-Diploma-project/internal/minio/usecase"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/handler"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/storage"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/usecase"
-	supersDelivery "github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/delivery"
-	supersRRepo "github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/repository"
+	supersHandler "github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/handler"
+	supersStor "github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/storage"
 	supersCase "github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/usecase"
-	userDelivery "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/delivery"
-	userRepository "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/repository"
+	userHandler "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/handler"
+	userStor "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/storage"
 	userCase "github.com/ZeeeUs/BMSTU-Diploma-project/internal/user/usecase"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/middleware"
 	redisClient "github.com/ZeeeUs/BMSTU-Diploma-project/pkg/redis"
@@ -66,22 +68,32 @@ func main() {
 	rc := redisClient.New(rCClient)
 
 	// repositories
-	userRepo := userRepository.NewUserRepository(pgConn, log)
-	sessionRepo := userRepository.NewSessionRepository(rc, log)
-	supersRepo := supersRRepo.NewSupersRepository(pgConn, log)
-	studentRepo := storage.NewStudentRepository(pgConn, log)
+	userStorage := userStor.NewUserStorage(pgConn, log)
+	sessionStorage := userStor.NewSessionStorage(rc, log)
+	supersStorage := supersStor.NewSupersStorage(pgConn, log)
+	studentStorage := storage.NewStudentStorage(pgConn, log)
+	minioStorage, err := minioStor.NewMinioStorage(
+		cfg.MinioConfig.Endpoint,
+		cfg.MinioConfig.AccessKeyID,
+		cfg.MinioConfig.SecretAccessKey,
+		log,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// usecases
-	userUseCase := userCase.NewUserUsecase(userRepo, cfg.Timeouts.ContextTimeout, log)
-	sessionUseCase := userCase.NewSessionUsecase(sessionRepo, cfg.Timeouts.ContextTimeout, log)
-	supersUseCase := supersCase.NewSupersUsecase(supersRepo, log)
-	studentUseCase := usecase.NewStudentUseCase(studentRepo, log)
+	// UseCases
+	userUseCase := userCase.NewUserUsecase(userStorage, cfg.Timeouts.ContextTimeout, log)
+	sessionUseCase := userCase.NewSessionUsecase(sessionStorage, cfg.Timeouts.ContextTimeout, log)
+	supersUseCase := supersCase.NewSupersUsecase(supersStorage, log)
+	studentUseCase := usecase.NewStudentUseCase(studentStorage, log)
+	minioUseCase := minioCase.NewMinioUseCase(minioStorage, log)
 
-	m := middleware.NewMiddleware(userRepo, sessionRepo)
+	m := middleware.NewMiddleware(userStorage, sessionStorage)
 
-	userDelivery.SetUserRouting(router, log, userUseCase, sessionUseCase, m)
-	supersDelivery.SetSupersRouting(router, log, supersUseCase, m)
-	handler.SetStudentRouting(router, log, studentUseCase, m)
+	userHandler.SetUserRouting(router, log, userUseCase, sessionUseCase, m)
+	supersHandler.SetSupersRouting(router, log, supersUseCase, m)
+	handler.SetStudentRouting(router, log, studentUseCase, minioUseCase, m)
 
 	server := &http.Server{
 		Handler:      router,

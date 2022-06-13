@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
+
 	"github.com/jackc/pgx"
 	"github.com/sirupsen/logrus"
 )
@@ -22,7 +23,7 @@ type studentStorage struct {
 	logger *logrus.Logger
 }
 
-func NewStudentRepository(pgConn *pgx.ConnPool, logger *logrus.Logger) StudentStorage {
+func NewStudentStorage(pgConn *pgx.ConnPool, logger *logrus.Logger) StudentStorage {
 	return &studentStorage{
 		conn:   pgConn,
 		logger: logger,
