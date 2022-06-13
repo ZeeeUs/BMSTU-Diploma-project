@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/config"
-	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/delivery"
-	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/repository"
+	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/handler"
+	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/storage"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/usecase"
 	supersDelivery "github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/delivery"
 	supersRRepo "github.com/ZeeeUs/BMSTU-Diploma-project/internal/supervisor/repository"
@@ -69,19 +69,19 @@ func main() {
 	userRepo := userRepository.NewUserRepository(pgConn, log)
 	sessionRepo := userRepository.NewSessionRepository(rc, log)
 	supersRepo := supersRRepo.NewSupersRepository(pgConn, log)
-	studentRepo := repository.NewStudentRepository(pgConn, log)
+	studentRepo := storage.NewStudentRepository(pgConn, log)
 
 	// usecases
 	userUseCase := userCase.NewUserUsecase(userRepo, cfg.Timeouts.ContextTimeout, log)
 	sessionUseCase := userCase.NewSessionUsecase(sessionRepo, cfg.Timeouts.ContextTimeout, log)
 	supersUseCase := supersCase.NewSupersUsecase(supersRepo, log)
-	studentUseCase := usecase.NewStudentUsecase(studentRepo, log)
+	studentUseCase := usecase.NewStudentUseCase(studentRepo, log)
 
 	m := middleware.NewMiddleware(userRepo, sessionRepo)
 
 	userDelivery.SetUserRouting(router, log, userUseCase, sessionUseCase, m)
 	supersDelivery.SetSupersRouting(router, log, supersUseCase, m)
-	delivery.SetStudentRouting(router, log, studentUseCase, m)
+	handler.SetStudentRouting(router, log, studentUseCase, m)
 
 	server := &http.Server{
 		Handler:      router,

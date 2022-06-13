@@ -1,19 +1,22 @@
-package delivery
+package handler
 
 import (
 	"encoding/json"
 	"net/http"
 	"strconv"
 
+	muc "github.com/ZeeeUs/BMSTU-Diploma-project/internal/minio/usecase"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
-	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/usecase"
+	suc "github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/usecase"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/middleware"
+
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
 type StudentHandler struct {
-	StudentUsecase usecase.StudentUsecase
+	StudentUseCase suc.StudentUseCase
+	MinIOUseCase   muc.MinIOUseCase
 	logger         *logrus.Logger
 }
 
@@ -22,19 +25,17 @@ const (
 	sourcePath  = "/usr/src/app/upload_files/"
 )
 
-//const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
-
-func SetStudentRouting(router *mux.Router, log *logrus.Logger, su usecase.StudentUsecase, m *middleware.Middleware) {
+func SetStudentRouting(router *mux.Router, log *logrus.Logger, su suc.StudentUseCase, m *middleware.Middleware) {
 	studentHandler := &StudentHandler{
-		StudentUsecase: su,
+		StudentUseCase: su,
 		logger:         log,
 	}
 
 	router.HandleFunc("/api/v1/student", m.CheckCSRFAndGetStudent(studentHandler.GetStudent)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/table", m.CheckCSRFAndGetStudent(studentHandler.GetTable)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/student/group", m.CheckCSRFAndGetStudent(studentHandler.GetGroupByUserId)).Methods("GET", "OPTIONS")
-	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/file", m.CheckCSRFAndGetStudent(studentHandler.UploadFile)).Methods("POST", "OPTIONS")
 	router.HandleFunc("/api/v1/student/file/{fileName}", m.CheckCSRFAndGetStudent(studentHandler.LoadFile)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/file", m.CheckCSRFAndGetStudent(studentHandler.UploadFile)).Methods("POST", "OPTIONS")
 	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/status", m.CheckCSRFAndGetStudent(studentHandler.ChangeEventStatus)).Methods("PUT", "OPTIONS")
 }
 
@@ -47,17 +48,6 @@ func (sh *StudentHandler) GetStudent(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	//group, studentId, err := sh.StudentUsecase.GetStudentGroup(r.Context(), student.Id)
-	//if err != nil {
-	//	sh.logger.Errorf("Problem with get student group %s", err)
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//student := models.Student{
-	//	Id: studentId,
-	//}
 
 	jsnStud, _ := json.Marshal(student)
 	w.Write(jsnStud)
@@ -73,7 +63,7 @@ func (sh *StudentHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	table, err := sh.StudentUsecase.GetTable(r.Context(), student.Id)
+	table, err := sh.StudentUseCase.GetTable(r.Context(), student.Id)
 	if err != nil {
 		sh.logger.Errorf("Can't get table for user: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -100,7 +90,7 @@ func (sh *StudentHandler) GetGroupByUserId(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	table, err := sh.StudentUsecase.GetGroup(r.Context(), student.Id)
+	table, err := sh.StudentUseCase.GetGroup(r.Context(), student.Id)
 	if err != nil {
 		sh.logger.Errorf("Can't get table for user: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -140,7 +130,7 @@ func (sh *StudentHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer uploadedFile.Close()
 
-	file, err := sh.StudentUsecase.AddFile(r.Context(), uploadedFile, fileHeader.Filename, studentEventId)
+	file, err := sh.StudentUseCase.AddFile(r.Context(), uploadedFile, fileHeader.Filename, studentEventId)
 	if err != nil {
 		sh.logger.Errorf("%s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -187,7 +177,7 @@ func (sh *StudentHandler) ChangeEventStatus(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = sh.StudentUsecase.ChangeEventStatus(r.Context(), status.Status, studentEventId)
+	err = sh.StudentUseCase.ChangeEventStatus(r.Context(), status.Status, studentEventId)
 	if err != nil {
 		sh.logger.Errorf("can't change event status on db: %s", err)
 		w.WriteHeader(http.StatusForbidden)

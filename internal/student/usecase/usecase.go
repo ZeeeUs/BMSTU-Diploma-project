@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
-	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/repository"
+	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/storage"
 	"github.com/jackc/pgx"
 	"github.com/sirupsen/logrus"
 )
 
-type StudentUsecase interface {
+type StudentUseCase interface {
 	GetStudentGroup(ctx context.Context, id int) (models.Group, int, error)
 	GetTable(ctx context.Context, id int) (models.Table, error)
 	GetGroup(ctx context.Context, id int) (models.Group, error)
@@ -25,25 +25,24 @@ type StudentUsecase interface {
 	ChangeEventStatus(ctx context.Context, status int, studentEventId int) error
 }
 
-type studentUsecase struct {
-	StudentRepository repository.StudentRepository
-	//FileRepository    repository.FileRepository
-	logger         *logrus.Logger
-	contextTimeout time.Duration
+type studentUseCase struct {
+	StudentRepository storage.StudentStorage
+	logger            *logrus.Logger
+	contextTimeout    time.Duration
 }
 
 const sourcePath = "/usr/src/app/upload_files/"
 
 //const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
 
-func NewStudentUsecase(sr repository.StudentRepository, log *logrus.Logger) StudentUsecase {
-	return &studentUsecase{
+func NewStudentUseCase(sr storage.StudentStorage, log *logrus.Logger) StudentUseCase {
+	return &studentUseCase{
 		StudentRepository: sr,
 		logger:            log,
 	}
 }
 
-func (su *studentUsecase) GetStudentGroup(ctx context.Context, id int) (models.Group, int, error) {
+func (su *studentUseCase) GetStudentGroup(ctx context.Context, id int) (models.Group, int, error) {
 	group, studentId, err := su.StudentRepository.GetUserGroup(ctx, id)
 	if err == pgx.ErrNoRows {
 		return models.Group{}, 0, fmt.Errorf("user with id %d is not found", id)
@@ -54,7 +53,7 @@ func (su *studentUsecase) GetStudentGroup(ctx context.Context, id int) (models.G
 	return group, studentId, nil
 }
 
-func (su *studentUsecase) GetTable(ctx context.Context, id int) (models.Table, error) {
+func (su *studentUseCase) GetTable(ctx context.Context, id int) (models.Table, error) {
 	table, err := su.StudentRepository.GetTable(ctx, id)
 	if err == pgx.ErrNoRows {
 		return models.Table{}, fmt.Errorf("can't get table for student with id = %d: err %s", id, err)
@@ -62,7 +61,7 @@ func (su *studentUsecase) GetTable(ctx context.Context, id int) (models.Table, e
 	return table, nil
 }
 
-func (su *studentUsecase) GetGroup(ctx context.Context, id int) (models.Group, error) {
+func (su *studentUseCase) GetGroup(ctx context.Context, id int) (models.Group, error) {
 	group, err := su.StudentRepository.GetGroup(ctx, id)
 	if err == pgx.ErrNoRows {
 		return models.Group{}, fmt.Errorf("can't get table for student with id = %d: err %s", id, err)
@@ -70,7 +69,7 @@ func (su *studentUsecase) GetGroup(ctx context.Context, id int) (models.Group, e
 	return group, nil
 }
 
-func (su *studentUsecase) AddFile(c context.Context, file io.Reader, fileName string, studentEventId int) (models.File, error) {
+func (su *studentUseCase) AddFile(c context.Context, file io.Reader, fileName string, studentEventId int) (models.File, error) {
 	ctx, cancel := context.WithTimeout(c, su.contextTimeout)
 	defer cancel()
 
@@ -79,7 +78,7 @@ func (su *studentUsecase) AddFile(c context.Context, file io.Reader, fileName st
 		return models.File{}, errors.New("AddPhoto: can't get current student from context")
 	}
 
-	savedFaileName, err := saveFile(currStudent, file, fileName, su.logger)
+	savedFileName, err := saveFile(currStudent, file, fileName, su.logger)
 	if err != nil {
 		return models.File{}, err
 	}
@@ -89,10 +88,10 @@ func (su *studentUsecase) AddFile(c context.Context, file io.Reader, fileName st
 		return models.File{}, err
 	}
 
-	return models.File{File: savedFaileName}, nil
+	return models.File{File: savedFileName}, nil
 }
 
-func (su *studentUsecase) LoadFile(ctx context.Context, student models.Student, fileName string) ([]byte, error) {
+func (su *studentUseCase) LoadFile(ctx context.Context, student models.Student, fileName string) ([]byte, error) {
 	bytesFile, err := loadFile(student.Id, fileName, su.logger)
 	if err != nil {
 		return nil, err
@@ -101,7 +100,7 @@ func (su *studentUsecase) LoadFile(ctx context.Context, student models.Student, 
 	return bytesFile, nil
 }
 
-func (su *studentUsecase) ChangeEventStatus(ctx context.Context, status int, studEvent int) error {
+func (su *studentUseCase) ChangeEventStatus(ctx context.Context, status int, studEvent int) error {
 	err := su.StudentRepository.ChangeEventStatus(ctx, status, studEvent)
 	if err != nil {
 		return err

@@ -1,10 +1,10 @@
 [DATABASE]
-POSTGRES_DB="bdb"
-POSTGRES_USER="buser"
-POSTGRES_PASSWORD="bpassword"
-#POSTGRES_DB="bmstuDb"
-#POSTGRES_USER="bmstuUser"
-#POSTGRES_PASSWORD="pgpwd4bmstu"
+#POSTGRES_DB="bdb"
+#POSTGRES_USER="buser"
+#POSTGRES_PASSWORD="bpassword"
+POSTGRES_DB="bmstuDb"
+POSTGRES_USER="bmstuUser"
+POSTGRES_PASSWORD="pgpwd4bmstu"
 DB_HOSTNAME="127.0.0.1"
 PORT=5432
 
@@ -15,3 +15,8 @@ ADDR="0.0.0.0:8000"
 Addr="0.0.0.0:7500"
 Password=""
 MaxRetries=5
+
+[MINIO]
+ENDPOINT="0.0.0.0:9000"
+ACCESS_KEY_ID="minio"
+SECRET_ACCESS_KEY="minio123"

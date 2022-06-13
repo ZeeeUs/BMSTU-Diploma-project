@@ -1,4 +1,4 @@
-package repository
+package storage
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type StudentRepository interface {
+type StudentStorage interface {
 	GetUserGroup(ctx context.Context, id int) (models.Group, int, error)
 	GetTable(ctx context.Context, id int) (table models.Table, err error)
 	GetGroup(ctx context.Context, id int) (group models.Group, err error)
@@ -17,19 +17,19 @@ type StudentRepository interface {
 	ChangeEventStatus(ctx context.Context, status int, studEventId int) error
 }
 
-type studentRepository struct {
+type studentStorage struct {
 	conn   *pgx.ConnPool
 	logger *logrus.Logger
 }
 
-func NewStudentRepository(pgConn *pgx.ConnPool, logger *logrus.Logger) StudentRepository {
-	return &studentRepository{
+func NewStudentRepository(pgConn *pgx.ConnPool, logger *logrus.Logger) StudentStorage {
+	return &studentStorage{
 		conn:   pgConn,
 		logger: logger,
 	}
 }
 
-func (sr *studentRepository) GetUserGroup(ctx context.Context, id int) (group models.Group, studentId int, err error) {
+func (sr *studentStorage) GetUserGroup(ctx context.Context, id int) (group models.Group, studentId int, err error) {
 	err = sr.conn.QueryRow("select student_id, id, group_code from test_db.student_group_v where user_id=$1", id).Scan(
 		&studentId,
 		&group.Id,
@@ -43,7 +43,7 @@ func (sr *studentRepository) GetUserGroup(ctx context.Context, id int) (group mo
 	return
 }
 
-func (sr *studentRepository) GetTable(ctx context.Context, id int) (models.Table, error) {
+func (sr *studentStorage) GetTable(ctx context.Context, id int) (models.Table, error) {
 	var (
 		cId     int
 		cName   string
@@ -127,7 +127,7 @@ func (sr *studentRepository) GetTable(ctx context.Context, id int) (models.Table
 	return tbl, nil
 }
 
-func (sr *studentRepository) GetGroup(ctx context.Context, id int) (group models.Group, err error) {
+func (sr *studentStorage) GetGroup(ctx context.Context, id int) (group models.Group, err error) {
 	err = sr.conn.QueryRow("select id, group_code from test_db.student_group_v where user_id=$1", id).Scan(
 		&group.Id,
 		&group.GroupCode,
@@ -140,7 +140,7 @@ func (sr *studentRepository) GetGroup(ctx context.Context, id int) (group models
 	return
 }
 
-func (sr *studentRepository) AddFileName(ctx context.Context, fileName string, studentEventId int) error {
+func (sr *studentStorage) AddFileName(ctx context.Context, fileName string, studentEventId int) error {
 	_, err := sr.conn.Exec("update test_db.student_event set upload_files=array_append(upload_files, $1)"+
 		" where id=$2", fileName, studentEventId)
 	if err != nil {
@@ -150,7 +150,7 @@ func (sr *studentRepository) AddFileName(ctx context.Context, fileName string, s
 	return nil
 }
 
-func (sr *studentRepository) ChangeEventStatus(ctx context.Context, status int, studEventId int) error {
+func (sr *studentStorage) ChangeEventStatus(ctx context.Context, status int, studEventId int) error {
 	_, err := sr.conn.Exec("update test_db.student_event set event_status=$1 where id=$2", status, studEventId)
 	if err != nil {
 		return err
