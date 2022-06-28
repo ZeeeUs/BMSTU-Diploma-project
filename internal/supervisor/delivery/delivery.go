@@ -33,7 +33,7 @@ func SetSupersRouting(router *mux.Router, log *logrus.Logger, su usecase.SupersU
 	router.HandleFunc("/api/v1/course/{id:[0-9]+}/events", m.CheckCSRFAndGetSuper(supersHandler.GetEventsByCourse)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/supervisor/student/{id:[0-9]+}/file/{fileName}", m.CheckCSRFAndGetSuper(supersHandler.DownloadFile)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/supervisor/student/{studentId}/course/{courseId}", m.CheckCSRFAndGetSuper(supersHandler.GetStudentEventsByCourse)).Methods("GET", "OPTIONS")
-	router.HandleFunc("/api/v1/student/event/{id:[0-9]+}/status", m.CheckCSRFAndGetSuper(supersHandler.ChangeEventStatus)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/api/v1/supervisor/event/{id:[0-9]+}/status", m.CheckCSRFAndGetSuper(supersHandler.ChangeEventStatus)).Methods("PUT", "OPTIONS")
 }
 
 func (sh *SupersHandler) GetSupers(w http.ResponseWriter, r *http.Request) {
