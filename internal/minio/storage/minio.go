@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -10,9 +11,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//const (
+//	bucket = "bmstu"
+//)
+
+var bucket = "bmstu"
+
 type MinioStorage interface {
 	GetFile(ctx context.Context, fileName string) error
-	UploadFile(ctx context.Context, file models.FileUnit, id int) error
+	UploadFile(ctx context.Context, file *models.File, id int) error
 	DeleteFile(ctx context.Context, fileName string) error
 }
 
@@ -37,8 +44,8 @@ func (ms *minioStorage) GetFile(ctx context.Context, fileName string) error {
 	return nil
 }
 
-func (ms *minioStorage) UploadFile(ctx context.Context, file models.FileUnit, id int) error {
-	err := ms.client.UploadFile(ctx, "123567.png", "test.txt", "bmstu", file.PayloadSize, file.Payload)
+func (ms *minioStorage) UploadFile(ctx context.Context, file *models.File, id int) error {
+	err := ms.client.UploadFile(ctx, file.Name, file.Name, bucket, file.Size, bytes.NewBuffer(file.Bytes))
 	if err != nil {
 		return err
 	}

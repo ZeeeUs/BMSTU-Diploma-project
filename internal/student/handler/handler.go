@@ -9,7 +9,7 @@ import (
 	"github.com/ZeeeUs/BMSTU-Diploma-project/internal/models"
 	suc "github.com/ZeeeUs/BMSTU-Diploma-project/internal/student/usecase"
 	"github.com/ZeeeUs/BMSTU-Diploma-project/pkg/middleware"
-
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
@@ -21,8 +21,8 @@ type StudentHandler struct {
 }
 
 const (
-	maxFileSize = 20 * 1024 * 1025
-	sourcePath  = "/usr/src/app/upload_files/"
+	// maxFileSize = 25 MB
+	maxFileSize = 25 << (10 * 2)
 )
 
 func SetStudentRouting(router *mux.Router, log *logrus.Logger, su suc.StudentUseCase, mu muc.MinioUseCase, m *middleware.Middleware) {
@@ -108,11 +108,12 @@ func (sh *StudentHandler) GetGroupByUserId(w http.ResponseWriter, r *http.Reques
 	w.Write(jsnTable)
 }
 
+// UploadFile is loaded file to minio storage
 func (sh *StudentHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(maxFileSize)
 	if err != nil {
-		sh.logger.Errorf("can't parse file: %s", err)
-		w.WriteHeader(http.StatusBadRequest)
+		sh.logger.Errorf("can't set max file size: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -123,48 +124,63 @@ func (sh *StudentHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uploadedFile, fileHeader, err := r.FormFile("file")
+	uploadedFile, ok := r.MultipartForm.File["file"]
+	if !ok || len(uploadedFile) == 0 {
+		sh.logger.Error("file required")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	fileInfo := uploadedFile[0]
+	fileReader, err := fileInfo.Open()
+	if err != nil {
+		sh.logger.Errorf("can't open fileInfo: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// TODO разобраться с типом документа
+	mtype, err := mimetype.DetectReader(fileReader)
+	if err != nil {
+		sh.logger.Errorf("can't detect mimetype: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	sh.logger.Infof("File mymetype: %s", mtype)
+
+	dto := models.CreateFileUnit{
+		PayloadName: fileInfo.Filename,
+		PayloadSize: fileInfo.Size,
+		Payload:     fileReader,
+	}
+	defer fileReader.Close()
+
+	err = sh.MinioUseCase.UploadFile(r.Context(), dto, studentEventId)
 	if err != nil {
 		sh.logger.Errorf("can't upload file: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	file := models.FileUnit{
-		PayloadSize: fileHeader.Size,
-		Payload:     uploadedFile,
-	}
-	defer uploadedFile.Close()
-
-	//fmt.Sprintf("%v%v", file, studentEventId)
-	//sh.logger.Info(file.PayloadSize)
-	//sh.logger.Info(file, studentEventId)
-	err = sh.MinioUseCase.UploadFile(r.Context(), file, studentEventId)
-	if err != nil {
-		sh.logger.Errorf("can't upload file: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }
 
-// Скачивание файла
+// LoadFile is downloaded file from minio storage
 func (sh *StudentHandler) LoadFile(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Content-Type", "application/octet-stream")
 
-	nameFromUrl := mux.Vars(r)["fileName"]
-
-	student, ok := r.Context().Value("student").(models.Student)
-	if !ok {
-		sh.logger.Errorf("Problem with get value from contetxt %v", ok)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	path := sourcePath + strconv.Itoa(student.Id) + "/" + nameFromUrl
-	http.ServeFile(w, r, path)
-	return
+	//nameFromUrl := mux.Vars(r)["fileName"]
+	//
+	//student, ok := r.Context().Value("student").(models.Student)
+	//if !ok {
+	//	sh.logger.Errorf("Problem with get value from contetxt %v", ok)
+	//	w.WriteHeader(http.StatusUnauthorized)
+	//	return
+	//}
+	//
+	//path := sourcePath + strconv.Itoa(student.Id) + "/" + nameFromUrl
+	//http.ServeFile(w, r, path)
+	//return
 }
 
 func (sh *StudentHandler) ChangeEventStatus(w http.ResponseWriter, r *http.Request) {

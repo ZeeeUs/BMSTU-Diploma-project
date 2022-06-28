@@ -5,13 +5,11 @@ import (
 	"net/http"
 )
 
-//easyjson:json
 type JSON struct {
 	Status int         `json:"status"`
 	Body   interface{} `json:"body"`
 }
 
-//easyjson:json
 type ModelError struct {
 	Message string `json:"message,omitempty"`
 }

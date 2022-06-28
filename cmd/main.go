@@ -67,7 +67,7 @@ func main() {
 
 	rc := redisClient.New(rCClient)
 
-	// repositories
+	// Storages
 	userStorage := userStor.NewUserStorage(pgConn, log)
 	sessionStorage := userStor.NewSessionStorage(rc, log)
 	supersStorage := supersStor.NewSupersStorage(pgConn, log)
@@ -91,6 +91,7 @@ func main() {
 
 	m := middleware.NewMiddleware(userStorage, sessionStorage)
 
+	// Handlers
 	userHandler.SetUserRouting(router, log, userUseCase, sessionUseCase, m)
 	supersHandler.SetSupersRouting(router, log, supersUseCase, m)
 	handler.SetStudentRouting(router, log, studentUseCase, minioUseCase, m)

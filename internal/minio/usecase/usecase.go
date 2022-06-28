@@ -10,7 +10,7 @@ import (
 
 type MinioUseCase interface {
 	GetFile(ctx context.Context, fileName string) error
-	UploadFile(ctx context.Context, file models.FileUnit, id int) error
+	UploadFile(ctx context.Context, file models.CreateFileUnit, id int) error
 	DeleteFile(ctx context.Context, fileName string) error
 }
 
@@ -26,12 +26,16 @@ func NewMinioUseCase(ms storage.MinioStorage, log *logrus.Logger) MinioUseCase {
 	}
 }
 
-func (mu *minioUseCase) UploadFile(ctx context.Context, file models.FileUnit, id int) error {
-	err := mu.MinioStorage.UploadFile(ctx, file, id)
+func (mu *minioUseCase) UploadFile(ctx context.Context, dto models.CreateFileUnit, id int) error {
+	dto.NormalizeName()
+	file, err := models.NewFile(dto)
 	if err != nil {
 		return err
 	}
-	mu.logger.Info("DONE")
+	err = mu.MinioStorage.UploadFile(ctx, file, id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
