@@ -18,6 +18,7 @@ type SupersUsecase interface {
 	GetEventsByCourseId(ctx context.Context, groupId int) ([]models.Event, error)
 	GetStudentEvents(ctx context.Context, studentId int, courseId int) ([]models.StudentEvent, error)
 	ChangeEventStatus(ctx context.Context, status int, studEvent int) error
+	AddComment(ctx context.Context, comment string, eventId int) error
 }
 
 type supersUsecase struct {
@@ -99,7 +100,16 @@ func (su *supersUsecase) GetStudentEvents(ctx context.Context, studentId int, co
 }
 
 func (su *supersUsecase) ChangeEventStatus(ctx context.Context, status int, studEvent int) error {
-	err := su.SupersRepository.ChangeEventStatus(ctx, status, studEvent)
+	err := su.SupersRepository.ChangeEventStatusRepo(ctx, status, studEvent)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (su *supersUsecase) AddComment(ctx context.Context, comment string, eventId int) error {
+	err := su.SupersRepository.AddComment(ctx, comment, eventId)
 	if err != nil {
 		return err
 	}
