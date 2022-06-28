@@ -16,6 +16,7 @@ type SupersRepository interface {
 	GetStudentsByGroup(ctx context.Context, groupId int) ([]models.StudentByGroup, error)
 	GetEventsByCourseId(ctx context.Context, id int) ([]models.Event, error)
 	GetStudentEvents(ctx context.Context, studentId int, courseId int) ([]models.StudentEvent, error)
+	ChangeEventStatus(ctx context.Context, status int, studEventId int) error
 }
 
 type supersRepo struct {
@@ -198,4 +199,15 @@ func (su *supersRepo) GetStudentEvents(ctx context.Context, studentId int, cours
 	}
 
 	return events, nil
+}
+
+func (su *supersRepo) ChangeEventStatus(ctx context.Context, status int, studEventId int) error {
+	_, err := su.conn.Exec("update test_db.student_event set event_status=$1 where id=$2", status, studEventId)
+	if err != nil {
+		return err
+	}
+
+	su.logger.Infof("event_status = %d\nid = %d\n", status, studEventId)
+
+	return nil
 }
