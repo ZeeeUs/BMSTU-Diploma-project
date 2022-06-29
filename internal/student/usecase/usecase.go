@@ -32,9 +32,8 @@ type studentUsecase struct {
 	contextTimeout time.Duration
 }
 
-const sourcePath = "/usr/src/app/upload_files/"
-
-//const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
+//const sourcePath = "/usr/src/app/upload_files/"
+const sourcePath = "/home/ubuntu/files"
 
 func NewStudentUsecase(sr repository.StudentRepository, log *logrus.Logger) StudentUsecase {
 	return &studentUsecase{
