@@ -33,7 +33,7 @@ type studentUsecase struct {
 }
 
 //const sourcePath = "/usr/src/app/upload_files/"
-const sourcePath = "/home/ubuntu/files/"
+const sourcePath = "/home/ubuntu/BMSTU-Diploma-project/fileserver/"
 
 func NewStudentUsecase(sr repository.StudentRepository, log *logrus.Logger) StudentUsecase {
 	return &studentUsecase{
@@ -110,7 +110,7 @@ func (su *studentUsecase) ChangeEventStatus(ctx context.Context, status int, stu
 }
 
 func saveFile(student models.Student, file io.Reader, fileName string, log *logrus.Logger) (string, error) {
-	path := sourcePath + strconv.Itoa(student.Id)
+	path := fmt.Sprintf("%s%s%d", sourcePath, "user_", student.Id)
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.Mkdir(path, os.ModePerm)
