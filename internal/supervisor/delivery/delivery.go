@@ -33,6 +33,8 @@ func SetSupersRouting(router *mux.Router, log *logrus.Logger, su usecase.SupersU
 	router.HandleFunc("/api/v1/course/{id:[0-9]+}/events", m.CheckCSRFAndGetSuper(supersHandler.GetEventsByCourse)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/supervisor/student/{id:[0-9]+}/file/{fileName}", m.CheckCSRFAndGetSuper(supersHandler.DownloadFile)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/v1/supervisor/student/{studentId}/course/{courseId}", m.CheckCSRFAndGetSuper(supersHandler.GetStudentEventsByCourse)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/supervisor/event/{id:[0-9]+}/status", m.CheckCSRFAndGetSuper(supersHandler.ChangeEventStatus)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/api/v1/supervisor/event/{id:[0-9]+}/comment", m.CheckCSRFAndGetSuper(supersHandler.AddComment)).Methods("POST", "OPTIONS")
 }
 
 func (sh *SupersHandler) GetSupers(w http.ResponseWriter, r *http.Request) {
@@ -163,6 +165,60 @@ func (sh *SupersHandler) GetEventsByCourse(w http.ResponseWriter, r *http.Reques
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (sh *SupersHandler) ChangeEventStatus(w http.ResponseWriter, r *http.Request) {
+	var status models.EventStatus
+
+	eventId, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		sh.logger.Errorf("can't get studentEventId from url: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&status)
+	if err != nil {
+		sh.logger.Errorf("can't decode status from request: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = sh.SupersUseCase.ChangeEventStatus(r.Context(), status.Status, eventId)
+	if err != nil {
+		sh.logger.Errorf("can't change event status on db: %s", err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (sh *SupersHandler) AddComment(w http.ResponseWriter, r *http.Request) {
+	var comment models.SuperComment
+
+	eventId, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		sh.logger.Errorf("can't get studentEventId from url: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&comment)
+	if err != nil {
+		sh.logger.Errorf("can't decode status from request: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = sh.SupersUseCase.AddComment(r.Context(), comment.Comment, eventId)
+	if err != nil {
+		sh.logger.Errorf("can't add comment: %s", err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (sh *SupersHandler) DownloadFile(w http.ResponseWriter, r *http.Request) {

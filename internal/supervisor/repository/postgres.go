@@ -16,6 +16,8 @@ type SupersRepository interface {
 	GetStudentsByGroup(ctx context.Context, groupId int) ([]models.StudentByGroup, error)
 	GetEventsByCourseId(ctx context.Context, id int) ([]models.Event, error)
 	GetStudentEvents(ctx context.Context, studentId int, courseId int) ([]models.StudentEvent, error)
+	ChangeEventStatusRepo(ctx context.Context, status int, studEventId int) error
+	AddComment(ctx context.Context, comment string, eventId int) error
 }
 
 type supersRepo struct {
@@ -198,4 +200,31 @@ func (su *supersRepo) GetStudentEvents(ctx context.Context, studentId int, cours
 	}
 
 	return events, nil
+}
+
+func (su *supersRepo) ChangeEventStatusRepo(ctx context.Context, status int, studEventId int) error {
+	_, err := su.conn.Exec("update test_db.student_event set event_status=$1 where id=$2", status, studEventId)
+	if err != nil {
+		return err
+	}
+
+	su.logger.Infof("event_status = %d\nid = %d\n", status, studEventId)
+
+	return nil
+}
+
+func (su *supersRepo) AddComment(ctx context.Context, comment string, eventId int) error {
+	_, err := su.conn.Exec("insert into test_db.comments (student_event_id, comment_field) VALUES ($1, $2)", eventId, comment)
+	if err != nil {
+		return err
+	}
+
+	err = su.ChangeEventStatusRepo(ctx, 2, eventId)
+	if err != nil {
+		return err
+	}
+
+	su.logger.Infof("student_event_id = %d\ncomment = %s\n", eventId, comment)
+
+	return nil
 }

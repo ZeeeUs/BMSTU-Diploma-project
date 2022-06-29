@@ -118,3 +118,7 @@ type StudentEvent struct {
 	UploadFiles []string `json:"uploadFiles"`
 	Comments    []string `json:"comment"`
 }
+
+type SuperComment struct {
+	Comment string
+}
