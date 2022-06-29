@@ -33,12 +33,7 @@ type studentUsecase struct {
 }
 
 //const sourcePath = "/usr/src/app/upload_files/"
-<<<<<<< HEAD
 const sourcePath = "/home/ubuntu/files"
-=======
-
-const sourcePath = "/home/zeus/BMSTU-Diploma-project/"
->>>>>>> 3e26bbf66f9eca2910c60aa512acc73b5478b930
 
 func NewStudentUsecase(sr repository.StudentRepository, log *logrus.Logger) StudentUsecase {
 	return &studentUsecase{
